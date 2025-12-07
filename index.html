@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LeseRakete</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overscroll-behavior: none;
+            user-select: none;
+            -webkit-user-select: none;
+            background-color: #f9fafb;
+        }
+
+        #spiel {
+            touch-action: none;
+        }
+        
+        .font-learning { font-family: 'Playwrite DE Grund', cursive; }
+        
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        .animate-pop-in { animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.8); } 100% { opacity: 1; transform: scale(1); } }
+
+        .card-shadow { box-shadow: 0 3px 0 rgba(0,0,0,0.15), 0 5px 10px rgba(0,0,0,0.1); }
+        .fade-out { animation: fadeOut 0.5s ease-out forwards; }
+        @keyframes fadeOut { from { opacity: 1; visibility: visible; } to { opacity: 0; visibility: hidden; } }
+
+        .animal-icon { filter: grayscale(100%) opacity(0.4); transform: scale(0.9); transition: all 0.5s ease; }
+        .animal-active { filter: grayscale(0%) opacity(1); transform: scale(1.3); z-index: 10; }
+        
+        .touch-target { cursor: pointer; touch-action: manipulation; }
+
+        .safe-area-pb {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+        
+        /* Grid für die Toggles auf kleinen Screens optimieren */
+        .toggle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+<body class="w-screen h-[100dvh] overflow-hidden flex flex-col select-none">
+
+    <div id="intro-screen" class="fixed inset-0 z-[100] bg-white flex items-center justify-center transition-opacity duration-500">
+        <h1 id="intro-title" class="text-4xl md:text-6xl font-bold text-blue-600 animate-bounce font-learning text-center opacity-0 transition-opacity duration-500">LeseRakete 🚀</h1>
+    </div>
+
+    <div id="swipe-feedback-bg" class="absolute inset-0 z-0 pointer-events-none transition-colors duration-150"></div>
+
+    <div id="app" class="relative w-full h-full z-10 flex flex-col hidden opacity-0 transition-opacity duration-500">
+
+        <!-- 1. SETUP (Menü) -->
+        <div id="startbildschirm" class="flex flex-col h-full p-4 bg-white z-50 relative overflow-y-auto">
+            <h1 class="text-2xl font-bold text-center text-blue-600 mb-2 mt-1 shrink-0 font-learning">LeseRakete 🚀</h1>
+
+            <div class="flex-grow flex flex-col gap-2 pb-20 px-1">
+                
+                <!-- Optionen -->
+                <div class="bg-gray-50 rounded-xl p-2 border border-gray-200 shrink-0 flex flex-col gap-3">
+                    
+                    <!-- Silben Range -->
+                    <div class="flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 whitespace-nowrap">
+                        <span>Mit Wörtern mit</span>
+                        <input type="number" id="min-silben" value="1" min="1" max="5" class="w-8 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                        <span>bis</span>
+                        <input type="number" id="max-silben" value="2" min="1" max="5" class="w-8 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                        <span>Silben</span>
+                    </div>
+
+                    <!-- Modus Auswahl (Dropdown) -->
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-gray-400 uppercase ml-1">Modus</label>
+                        <div class="flex items-center bg-white border-2 border-gray-200 rounded-lg p-2 shadow-sm">
+                            <!-- Zahl Input -->
+                            <input type="number" id="mode-value" value="5" min="1" max="60" class="w-12 text-center text-xl font-bold text-red-600 outline-none border-r border-gray-100 mr-2 bg-transparent" onfocus="this.select()" onchange="updateModeValue(this.value)">
+                            
+                            <!-- Dropdown -->
+                            <select id="mode-select" class="w-full bg-transparent font-bold text-blue-600 outline-none text-base touch-target" onchange="switchMode(this.value)">
+                                <option value="time">Minuten lang lesen</option>
+                                <option value="count">Wörter lesen</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Toggles -->
+                    <div class="toggle-grid mt-1">
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                            <input id="silben-faerben" type="checkbox" checked class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Rot-Blau<br>Silben</span>
+                        </label>
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                            <input id="silben-abstand" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Abstand<br>zw. Silben</span>
+                        </label>
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                            <input id="artikel-anzeigen" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Artikel<br>anzeigen</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Lernstand (Akkordeon Liste) -->
+                <div class="flex flex-col gap-1.5 overflow-y-auto" id="heft-list">
+                    <!-- Wird per JS generiert -->
+                </div>
+                
+                <!-- Versteckter Container für Buchstaben -->
+                <div id="buchstaben-wrapper" class="hidden">
+                    <div class="p-2 bg-blue-50/50 border-t border-blue-100">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
+                            <button type="button" id="btn-select-all" class="touch-target text-xs text-blue-600 font-semibold underline px-2 py-1">Alle</button>
+                        </div>
+                        <div id="buchstaben-list-inner" class="grid grid-cols-7 gap-1"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-100 safe-area-pb z-50">
+                <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                    Starten
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. SPIELFELD -->
+        <div id="spiel" class="hidden w-full h-full relative flex flex-col">
+            <!-- Header Bar -->
+            <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50 pointer-events-none">
+                
+                <!-- Linke Gruppe: Button, Fortschritt, Zeit -->
+                <div class="flex items-center gap-2 pointer-events-auto">
+                    <button id="stop-button" class="touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            Beenden
+                        </span>
+                    </button>
+                    
+                    <div id="fortschritt-anzeige" class="text-blue-600 font-mono font-bold text-sm sm:text-lg bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">
+                        <span id="fortschritt-text">1 / 10</span>
+                    </div>
+                    
+                    <div id="timer-display" class="text-blue-600 font-mono font-bold text-sm sm:text-lg bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">00:00</div>
+                </div>
+
+                <!-- Rechte Gruppe: Einstellungen -->
+                <button id="einstellungen-button" class="touch-target text-gray-400 hover:text-blue-600 bg-white/90 backdrop-blur p-2 rounded-full shadow-sm border border-gray-100 pointer-events-auto active:scale-90 transition-transform ml-2">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Physics Canvas -->
+            <div id="2d-canvas-container" class="absolute inset-0 z-0 w-full h-full"></div>
+
+            <!-- Card -->
+            <div class="absolute inset-0 z-30 flex items-center justify-center pointer-events-none p-4 pb-20">
+                <div id="card-swipe-layer" class="w-full max-w-xs aspect-[3/2] pointer-events-auto cursor-grab active:cursor-grabbing touch-none select-none will-change-transform relative">
+                    <div id="card-content-layer" class="w-full h-full bg-white rounded-3xl card-shadow border border-gray-200 flex items-center justify-center relative overflow-hidden bg-white select-none transition-colors duration-150">
+                        
+                        <!-- WORT ANZEIGE CONTAINER (wird skaliert) -->
+                        <div id="wort-anzeige-container" class="w-full h-full flex flex-row items-center justify-center p-4 relative z-10 pointer-events-none gap-2 sm:gap-4">
+                            <!-- Artikel (Schriftgröße identisch zum Wort, hier nur hidden toggle) -->
+                            <span id="artikel-anzeige" class="hidden font-bold leading-none font-learning text-gray-800"></span>
+                            <!-- Wort -->
+                            <div id="wort-anzeige" class="font-bold whitespace-nowrap select-none text-gray-800 leading-none font-learning flex"></div>
+                        </div>
+
+                        <div id="card-overlay" class="absolute inset-0 z-20 flex items-center justify-center opacity-0 transition-opacity duration-150 bg-transparent pointer-events-none"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Los Button (nur im Count Modus am Ende) -->
+            <div id="los-button-container" class="hidden absolute bottom-12 left-0 right-0 flex justify-center z-50 pointer-events-none">
+                <button id="los-button" class="touch-target pointer-events-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-3xl py-3 px-12 rounded-full shadow-xl transition-transform duration-150 hover:scale-105 active:scale-95 animate-bounce">Los!</button>
+            </div>
+        </div>
+
+        <!-- 3. AUSWERTUNG -->
+        <div id="auswertung" class="hidden absolute inset-0 z-[60] bg-white flex flex-col justify-center items-center p-6 select-none">
+            <!-- Dynamischer Titel -->
+            <h2 id="auswertung-titel" class="text-3xl md:text-4xl font-bold text-blue-600 mb-6 drop-shadow-sm font-learning text-center px-2">Super!</h2>
+            
+            <div id="tier-leiter" class="flex flex-row items-end justify-center gap-4 mb-8 w-full max-w-sm h-24"></div>
+
+            <div id="result-box" class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 w-full max-w-xs text-center shadow-sm">
+                <!-- Inhalt wird dynamisch gefüllt -->
+            </div>
+            <button id="zurueck-button" class="touch-target w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">Nochmal spielen</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATEN ---
+        const HEFTE = [
+            { name: "1", letters: "M, A, L, I, O, S", suffix: "", buchstaben: ['M', 'A', 'L', 'I', 'O', 'S'], min: 1, max: 2 },
+            { name: "2", letters: "E, N, D, U, P, K", suffix: "(inkl. Heft 1)", buchstaben: ['E', 'N', 'D', 'U', 'P', 'K'], min: 2, max: 3 },
+            { name: "3", letters: "H, T, R, F, W, Ei, Au, Eu", suffix: "(inkl. Heft 1 und 2)", buchstaben: ['H', 'T', 'R', 'F', 'W', 'Ei', 'Au', 'Eu'], min: 2, max: 4 },
+            { name: "4", letters: "B, G, J, Z, Ch, Sch, Ck, Ä, Ö, Ü, V, X, Y, Q", suffix: "(inkl. Heft 1, 2 und 3)", buchstaben: ['B', 'G', 'J', 'Z', 'Ch', 'Sch', 'Ck', 'Ä', 'Ö', 'Ü', 'V', 'X', 'Y', 'Q'], min: 2, max: 4 }
+        ];
+
+        const ANIMALS = [
+            { icon: '🐌', wpm: 1, title: "Gemütlich wie eine Schnecke!" },
+            { icon: '🐢', wpm: 2, title: "Stetig wie eine Schildkröte!" },
+            { icon: '🐇', wpm: 3, title: "Hüpfig wie ein Hase!" },
+            { icon: '🐎', wpm: 4, title: "Schnell wie ein Pferd!" },
+            { icon: '🐆', wpm: 5, title: "Pfeilschnell wie ein Gepard!" }
+        ];
+
+        const VOKALE_LISTE = ['A', 'E', 'I', 'O', 'U', 'Ä', 'Ö', 'Ü'];
+        const DIPHTHONGE_LISTE = ['Ei', 'Ai', 'Eu', 'Au'];
+        const RAINBOW_COLORS = ['#9C4F96', '#FF6355', '#FBA949', '#FAE442', '#8BD448', '#2AA8F2'];
+        
+        // s: Silben, a: Artikel (optional)
+        const WOERTERBUCH = [
+            // HEFT 1
+            {s:['Ma','ma'], a:'die'}, {s:['Mi','mi'], a:'die'}, {s:['O','mi'], a:'die'}, {s:['O','ma'], a:'die'}, {s:['A','li'], a:'der'},
+            {s:['Li','lo'], a:'die'}, {s:['Lo','la'], a:'die'}, {s:['Li','sa'], a:'die'}, {s:['Sis','si'], a:'die'}, {s:['Mo','mo'], a:'der'},
+            {s:['La','ma'], a:'das'}, {s:['Li','la'], a:'das'}, {s:['Sa','la','mi'], a:'die'}, {s:['Li','mo'], a:'die'}, {s:['Si','lo'], a:'das'},
+            {s:['So','lo'], a:'das'}, {s:['Ma','l'], a:'das'}, {s:['Lo','s'], a:'das'}, {s:['Mi','mi','mi'], a:'das'},
+            {s:['li','la']}, {s:['lo','s']}, {s:['so','la','la']}, {s:['ma','l']}, {s:['soll']}, {s:['lass']}, {s:['So','ma','li','a']},
+
+            // HEFT 2
+            {s:['Pan','da'], a:'der'}, {s:['En','te'], a:'die'}, {s:['Pu','del'], a:'der'}, {s:['Ka','mel'], a:'das'}, {s:['Pe','li','kan'], a:'der'},
+            {s:['Lam','m'], a:'das'}, {s:['Pu','te'], a:'die'}, {s:['An','ti','lo','pe'], a:'die'}, {s:['Ka','ka','du'], a:'der'}, {s:['Sa','lat'], a:'der'},
+            {s:['To','ma','te'], a:'die'}, {s:['Me','lo','ne'], a:'die'}, {s:['Ka','ka','o'], a:'der'}, {s:['Nu','del'], a:'die'}, {s:['A','na','nas'], a:'die'},
+            {s:['Keks'], a:'der'}, {s:['Li','mo','na','de'], a:'die'}, {s:['Do','se'], a:'die'}, {s:['Mond'], a:'der'}, {s:['Son','ne'], a:'die'},
+            {s:['Tas','se'], a:'die'}, {s:['Lu','pe'], a:'die'}, {s:['Pin','sel'], a:'der'}, {s:['Kis','te'], a:'die'}, {s:['Lam','pe'], a:'die'},
+            {s:['Pa','ket'], a:'das'}, {s:['Post'], a:'die'}, {s:['Tan','ne'], a:'die'}, {s:['Sand'], a:'der'}, {s:['See'], a:'der'},
+            {s:['Do','mi','no'], a:'das'}, {s:['Mi','ka','do'], a:'das'}, {s:['Pa','pa'], a:'der'}, {s:['Tan','te'], a:'die'}, {s:['On','kel'], a:'der'},
+            {s:['Pi','lot'], a:'der'}, {s:['Kun','de'], a:'der'}, {s:['Pa','te'], a:'der'}, {s:['Mi','nu','ten'], a:'die'},
+            {s:['nett']}, {s:['dumm']}, {s:['kalt']}, {s:['nass']}, {s:['laut']}, {s:['mun','ter']}, {s:['dan','kend']}, {s:['rund']}, {s:['e','del']}, {s:['toll']}, {s:['satt']},
+            {s:['tun']}, {s:['tunkt']}, {s:['putzt']}, {s:['isst']}, {s:['sen','det']}, {s:['dehnt']}, {s:['en','det']}, {s:['kannst']}, {s:['ma','len']}, {s:['le','sen']}, {s:['tur','nen']}, {s:['sein']},
+
+            // HEFT 3
+            {s:['Eis'], a:'das'}, {s:['Maus'], a:'die'}, {s:['Haus'], a:'das'}, {s:['Au','to'], a:'das'}, {s:['Eu','le'], a:'die'}, {s:['Sei','fe'], a:'die'},
+            {s:['Lei','ter'], a:'die'}, {s:['Mau','er'], a:'die'}, {s:['Feu','er'], a:'das'}, {s:['Eu','ro'], a:'der'}, {s:['Rei','se'], a:'die'}, {s:['A','mei','se'], a:'die'},
+            {s:['Haus','tier'], a:'das'}, {s:['Ho','se'], a:'die'}, {s:['Hut'], a:'der'}, {s:['Hof'], a:'der'}, {s:['Fo','to'], a:'das'}, {s:['So','fa'], a:'das'},
+            {s:['E','le','fant'], a:'der'}, {s:['Fahr','rad'], a:'das'}, {s:['Win','ter'], a:'der'}, {s:['Was','ser'], a:'das'}, {s:['Wurm'], a:'der'}, {s:['Tor'], a:'das'},
+            {s:['Ra','dio'], a:'das'}, {s:['Te','le','fon'], a:'das'}, {s:['Ta','fel'], a:'die'}, {s:['Fens','ter'], a:'das'}, {s:['Leh','rer'], a:'der'}, {s:['Fah','rer'], a:'der'},
+            {s:['Far','be'], a:'die'}, {s:['Fle','der','maus'], a:'die'}, {s:['Mar','me','la','de'], a:'die'}, {s:['Feu','er','wehr'], a:'die'}, {s:['In','di','a','ner'], a:'der'}, {s:['Trom','pe','te'], a:'die'}, {s:['Pra','li','ne'], a:'die'},
+            {s:['lei','se']}, {s:['teu','er']}, {s:['neu']}, {s:['froh']}, {s:['hart']}, {s:['wahr']}, {s:['hell']}, {s:['warm']}, {s:['rot']}, {s:['weit']}, {s:['frei']}, {s:['flau']}, {s:['treu']},
+            {s:['reist']}, {s:['läuft']}, {s:['weint']}, {s:['ruft']}, {s:['hört']}, {s:['haut']}, {s:['kauft']}, {s:['freut']}, {s:['hofft']}, {s:['wärmt']}, {s:['wart']}, {s:['fah','re']}, {s:['ru','fen']}, {s:['ho','len']},
+
+            // HEFT 4
+            {s:['Bär'], a:'der'}, {s:['Kä','se'], a:'der'}, {s:['Öl'], a:'das'}, {s:['Tür'], a:'die'}, {s:['Müll'], a:'der'}, {s:['Lö','we'], a:'der'}, {s:['Schü','ler'], a:'der'}, {s:['Schu','le'], a:'die'},
+            {s:['Tisch'], a:'der'}, {s:['Fisch'], a:'der'}, {s:['Schiff'], a:'das'}, {s:['Schaf'], a:'das'}, {s:['Ta','sche'], a:'die'}, {s:['Wä','sche'], a:'die'}, {s:['Mäd','chen'], a:'das'}, {s:['Kö','nig'], a:'der'},
+            {s:['Ü','bung'], a:'die'}, {s:['Scho','ko','la','de'], a:'die'}, {s:['Schmet','ter','ling'], a:'der'}, {s:['Re','gen','schirm'], a:'der'},
+            {s:['Buch'], a:'das'}, {s:['Baum'], a:'der'}, {s:['Blu','me'], a:'die'}, {s:['Brot'], a:'das'}, {s:['Ball'], a:'der'}, {s:['Bein'], a:'das'}, {s:['Bauch'], a:'der'}, {s:['Ba','cken'], a:'das'},
+            {s:['We','cker'], a:'der'}, {s:['Da','ckel'], a:'der'}, {s:['Sack'], a:'der'}, {s:['Ja','cke'], a:'die'}, {s:['Geld'], a:'das'}, {s:['Gold'], a:'das'}, {s:['Gras'], a:'das'}, {s:['Glas'], a:'das'},
+            {s:['Glück'], a:'das'}, {s:['Milch'], a:'die'}, {s:['Dach'], a:'das'}, {s:['Licht'], a:'das'}, {s:['Nacht'], a:'die'}, {s:['Re','gen','bo','gen'], a:'der'}, {s:['Bä','cke','rei'], a:'die'},
+            {s:['Ge','mü','se'], a:'das'}, {s:['Ho','nig','bie','ne'], a:'die'}, {s:['Vo','gel'], a:'der'}, {s:['Va','se'], a:'die'}, {s:['Va','ter'], a:'der'}, {s:['Vul','kan'], a:'der'},
+            {s:['Jä','ger'], a:'der'}, {s:['Jun','ge'], a:'der'}, {s:['Ja','gu','ar'], a:'der'}, {s:['Jog','hurt'], a:'der'}, {s:['Ta','xi'], a:'das'}, {s:['Text'], a:'der'}, {s:['Xy','lo','phon'], a:'das'},
+            {s:['Po','ny'], a:'das'}, {s:['Han','dy'], a:'das'}, {s:['Qual','le'], a:'die'}, {s:['A','qua','ri','um'], a:'das'}, {s:['Quel','le'], a:'die'}, {s:['Last','wa','gen'], a:'der'},
+            {s:['Lo','ko','mo','ti','ve'], a:'die'}, {s:['A','ben','teu','er'], a:'das'},
+            {s:['schön']}, {s:['süß']}, {s:['grün']}, {s:['gelb']}, {s:['glück','lich']}, {s:['weich']}, {s:['groß']}, {s:['klein']}, {s:['jung']}, {s:['bö','se']}, {s:['schwer']}, {s:['e','ckig']}, {s:['mu','tig']},
+            {s:['magst']}, {s:['gibst']}, {s:['fängt']}, {s:['schlägt']}, {s:['bricht']}, {s:['wächst']}, {s:['jagt']}, {s:['quakt']}, {s:['übt']}, {s:['ge','hen']}, {s:['la','chen']}, {s:['ko','chen']}
+        ];
+
+        // --- STATE ---
+        const state = {
+            settings: { 
+                heftIndex: 0, 
+                buchstaben: [], 
+                minSilben: 1, 
+                maxSilben: 2, 
+                mode: 'time', 
+                targetCount: 10,
+                targetTime: 5,
+                farben: true, 
+                abstand: false, 
+                showArticles: false, 
+                currentLetters: [], 
+                manualSyllables: false 
+            },
+            game: { runde: 0, richtig: 0, history: new Set(), colorIndex: 0, active: false, finished: false, inBonusPhase: false, letterStats: {}, wordStartTime: 0, startTimeGlobal: 0, timerInterval: null, realWordsPossible: [], isProcessing: false, finalDuration: 0, isVortexing: false },
+            view: { zoom: 1, targetZoom: 1 }
+        };
+
+        // --- DOM ---
+        const dom = {
+            intro: document.getElementById('intro-screen'), app: document.getElementById('app'),
+            views: { start: document.getElementById('startbildschirm'), spiel: document.getElementById('spiel'), ende: document.getElementById('auswertung'), titleEnd: document.getElementById('auswertung-titel') },
+            inputs: { 
+                heftList: document.getElementById('heft-list'), 
+                buchstabenWrapper: document.getElementById('buchstaben-wrapper'),
+                buchstabenList: document.getElementById('buchstaben-list-inner'),
+                min: document.getElementById('min-silben'), max: document.getElementById('max-silben'), 
+                modeValue: document.getElementById('mode-value'),
+                modeSelect: document.getElementById('mode-select'),
+                color: document.getElementById('silben-faerben'), gap: document.getElementById('silben-abstand'), 
+                artikel: document.getElementById('artikel-anzeigen'),
+                btnSelectAll: document.getElementById('btn-select-all')
+            },
+            btns: { start: document.getElementById('start-button'), settings: document.getElementById('einstellungen-button'), back: document.getElementById('zurueck-button'), stop: document.getElementById('stop-button'), los: document.getElementById('los-button') },
+            card: { swipe: document.getElementById('card-swipe-layer'), content: document.getElementById('card-content-layer'), textContainer: document.getElementById('wort-anzeige-container'), text: document.getElementById('wort-anzeige'), artikel: document.getElementById('artikel-anzeige'), overlay: document.getElementById('card-overlay'), bg: document.getElementById('swipe-feedback-bg') },
+            stats: { progressText: document.getElementById('fortschritt-text'), timer: document.getElementById('timer-display'), animals: document.getElementById('tier-leiter'), resultBox: document.getElementById('result-box') },
+            misc: { losContainer: document.getElementById('los-button-container') }
+        };
+
+        let engine, render, runner, stirrer, mouseConstraint, physicsActive = false;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // FONT LOADING CHECK
+            document.fonts.ready.then(() => {
+                const title = document.getElementById('intro-title');
+                if(title) title.classList.remove('opacity-0');
+            });
+
+            try {
+                initHeftList();
+                
+                dom.btns.start.onclick = startGame;
+                dom.btns.settings.onclick = showStart;
+                dom.btns.back.onclick = showStart;
+                dom.btns.los.onclick = startVortex;
+                
+                if(dom.inputs.btnSelectAll) dom.inputs.btnSelectAll.onclick = selectAllChars;
+                
+                dom.btns.stop.onclick = handleStopButton;
+                window.addEventListener('resize', () => { if(physicsActive) resizePhysics(); adjustFontSize(); });
+                document.addEventListener('mousemove', moveStirrer);
+                document.addEventListener('touchmove', moveStirrer, {passive: false});
+                document.addEventListener('touchstart', handleInteractionStart, {passive: false});
+                document.addEventListener('mousedown', handleInteractionStart);
+                
+                initSwipeLogic();
+                ladeEinstellungen();
+                startAppSequence();
+                
+            } catch (e) {
+                console.error(e);
+                dom.intro.style.display = 'none'; dom.app.classList.remove('hidden'); dom.app.style.opacity = '1'; dom.views.start.classList.remove('hidden'); dom.views.start.classList.add('flex');
+            }
+        });
+
+        // DEFINIERE DIESE FUNKTIONEN ZUERST
+        function showEnd() {
+            state.game.active = false; stopPhysics();
+            dom.views.spiel.classList.add('hidden'); dom.views.ende.classList.remove('hidden'); dom.views.ende.classList.add('flex');
+            
+            const dur = state.game.finalDuration || (Date.now() - state.game.startTimeGlobal);
+            const secs = Math.floor(dur/1000);
+            const formattedTime = `${Math.floor(secs/60).toString().padStart(2,'0')}:${(secs%60).toString().padStart(2,'0')}`;
+
+            const mins = secs/60; const wpm = mins > 0 ? state.game.richtig / mins : 0;
+            let level = -1; 
+            ANIMALS.forEach((a, i) => { if(wpm >= a.wpm) level = i; });
+            
+            dom.views.titleEnd.textContent = level >= 0 ? ANIMALS[level].title : "Gut gemacht!";
+
+            // ANIMALS RENDER
+            dom.stats.animals.innerHTML = ANIMALS.map((a, i) => `
+                <div class="flex flex-col items-center justify-center transition-all duration-500 ${i===level ? 'animal-active' : 'animal-icon'}">
+                    <span class="text-5xl">${a.icon}</span>
+                </div>
+            `).join(''); 
+
+            // RESULT TEXT UPDATE
+            if (state.settings.mode === 'count') {
+                const wortLabel = state.game.richtig === 1 ? "Wort" : "Wörter";
+                dom.stats.resultBox.innerHTML = `
+                    <p class="text-2xl font-bold text-gray-800 mb-2">Du hast <span class="text-blue-600 text-3xl">${state.game.richtig}</span> ${wortLabel} gelesen!</p>
+                    <p class="text-base text-gray-500">Du hast dafür <span class="font-mono text-gray-800 font-bold">${formattedTime}</span> Minuten gebraucht.</p>
+                `;
+            } else {
+                const wortLabel = state.game.richtig === 1 ? "Wort" : "Wörter";
+                dom.stats.resultBox.innerHTML = `
+                    <p class="text-gray-500 text-sm mb-1">Ergebnis</p>
+                    <p class="text-3xl font-bold text-gray-800 mb-1"><span class="text-green-600">${state.game.richtig}</span> ${wortLabel}</p>
+                    <p class="text-base text-gray-500">Zeit: <span class="font-mono text-gray-700">${formattedTime}</span></p>
+                `;
+            }
+        }
+
+        // --- STRUDEL FUNKTION ---
+        function startVortex() {
+            state.game.isVortexing = true;
+            dom.misc.losContainer.classList.add('hidden'); // Button verstecken
+            
+            if(engine) {
+                // Schwerkraft aus
+                engine.world.gravity.y = 0; 
+                
+                // Wirbel-Schleife
+                let startV = Date.now();
+                
+                function updateVortex() {
+                    if(!state.game.isVortexing || !engine || !render) return;
+                    
+                    let elapsed = Date.now() - startV;
+                    // 4 Sekunden
+                    if(elapsed > 4000) {
+                        showEnd();
+                        return;
+                    }
+                    
+                    const bodies = Matter.Composite.allBodies(engine.world).filter(b => !b.isStatic && b.label !== 'wall');
+                    const cx = render.canvas.width / 2;
+                    const cy = render.canvas.height / 2;
+                    
+                    bodies.forEach(b => {
+                        const dx = cx - b.position.x;
+                        const dy = cy - b.position.y;
+                        
+                        // Startet NOCH langsamer
+                        const pullStrength = 0.000005 * (1 + elapsed/3000); 
+                        const turnStrength = 0.0001 * (1 + elapsed/4000);
+                        
+                        // Dämpfung
+                        Matter.Body.setVelocity(b, {
+                            x: b.velocity.x * 0.98,
+                            y: b.velocity.y * 0.98
+                        });
+
+                        Matter.Body.applyForce(b, b.position, {
+                            x: dx * pullStrength + dy * turnStrength, // Sog + Rotation
+                            y: dy * pullStrength - dx * turnStrength
+                        });
+                    });
+                    
+                    requestAnimationFrame(updateVortex);
+                }
+                updateVortex();
+            }
+        }
+
+        // --- MENÜ: AKKORDEON ---
+        function initHeftList() {
+            dom.inputs.heftList.innerHTML = HEFTE.map((h, i) => `
+                <div class="heft-wrapper relative" id="heft-wrapper-${i}">
+                    <button class="heft-btn touch-target w-full text-left py-2 px-3 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm bg-white z-10" onclick="selectHeft(${i})">
+                        <div class="pointer-events-none">
+                            <span class="font-bold text-gray-800">Heft ${h.name}</span>
+                            <span class="text-gray-600 font-medium"> - ${h.letters}</span>
+                            ${h.suffix ? `<span class="text-xs text-gray-400 ml-1 whitespace-nowrap">${h.suffix}</span>` : ''}
+                        </div>
+                        <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-50 transition-opacity z-0 pointer-events-none"></div>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function selectHeft(index) {
+            state.settings.heftIndex = index;
+            
+            if (!state.settings.manualSyllables) {
+                const conf = HEFTE[index];
+                dom.inputs.min.value = conf.min;
+                dom.inputs.max.value = conf.max;
+            }
+
+            const wrappers = dom.inputs.heftList.querySelectorAll('.heft-wrapper');
+            const buttons = dom.inputs.heftList.querySelectorAll('.heft-btn');
+
+            buttons.forEach((btn, i) => {
+                btn.className = 'heft-btn touch-target w-full text-left py-2 px-3 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm';
+                if (i === index) {
+                    btn.classList.add('border-blue-600', 'bg-blue-50', 'shadow-md', 'ring-1', 'ring-blue-200');
+                    if(dom.inputs.buchstabenWrapper) {
+                        wrappers[i].appendChild(dom.inputs.buchstabenWrapper);
+                        dom.inputs.buchstabenWrapper.classList.remove('hidden');
+                    }
+                } else if (i < index) {
+                    btn.classList.add('border-green-200', 'bg-green-50/50', 'opacity-75');
+                } else {
+                    btn.classList.add('border-gray-200', 'bg-white', 'text-gray-400');
+                }
+            });
+            updateBuchstabenUI(index);
+        }
+
+        function updateBuchstabenUI(idx, savedSelection = null) {
+            const currentLetters = HEFTE[idx].buchstaben;
+            if(dom.inputs.buchstabenList) {
+                dom.inputs.buchstabenList.innerHTML = currentLetters.map(b => {
+                    const checked = savedSelection ? savedSelection.includes(b) : true;
+                    return `<div class="flex items-center justify-center"><input type="checkbox" id="cb-${b}" value="${b}" class="peer hidden" ${checked ? 'checked' : ''} onchange="saveSettings()"><label for="cb-${b}" class="touch-target w-full text-center py-1 border-2 border-gray-200 rounded-lg cursor-pointer text-gray-600 font-bold select-none transition-all peer-checked:border-blue-600 peer-checked:bg-white peer-checked:text-blue-700 peer-checked:shadow-sm text-sm bg-white active:scale-95 font-learning">${b}</label></div>`;
+                }).join('');
+            }
+        }
+
+        function selectAllChars() {
+             const listInner = dom.inputs.buchstabenList;
+             if(listInner) {
+                 listInner.querySelectorAll('input').forEach(cb => cb.checked = true);
+                 saveSettings();
+             }
+        }
+
+        // --- NEW MODE HANDLING ---
+        function switchMode(newMode) {
+            state.settings.mode = newMode;
+            // Update input value based on stored targets
+            dom.inputs.modeValue.value = newMode === 'count' ? state.settings.targetCount : state.settings.targetTime;
+            saveSettings();
+        }
+
+        function updateModeValue(val) {
+            val = parseInt(val);
+            if(state.settings.mode === 'count') state.settings.targetCount = val;
+            else state.settings.targetTime = val;
+            saveSettings();
+        }
+
+        function getAllAllowedLetters() {
+            const idx = state.settings.heftIndex;
+            let allowed = [];
+            for(let i=0; i<idx; i++) allowed = allowed.concat(HEFTE[i].buchstaben);
+            const listInner = dom.inputs.buchstabenList;
+            if(listInner) {
+                 const checked = Array.from(listInner.querySelectorAll('input:checked')).map(c => c.value);
+                 allowed = allowed.concat(checked);
+            }
+            return [...new Set(allowed)];
+        }
+
+        function startAppSequence() {
+            setTimeout(() => {
+                dom.intro.classList.add('fade-out');
+                setTimeout(() => { dom.intro.style.display = 'none'; dom.app.classList.remove('hidden'); void dom.app.offsetWidth; dom.app.style.opacity = '1'; dom.views.start.classList.remove('hidden'); dom.views.start.classList.add('flex'); }, 500);
+            }, 1500);
+        }
+
+        function handleStopButton() {
+            if (state.game.finished) { showEnd(); return; }
+            if (state.game.inBonusPhase) { showEnd(); return; }
+
+            if (dom.btns.stop.classList.contains('confirm-mode')) endGameTimeUp();
+            else {
+                dom.btns.stop.classList.add('confirm-mode', 'bg-red-600', 'text-white', 'border-red-600'); dom.btns.stop.innerHTML = 'Sicher?';
+                setTimeout(() => { 
+                    if(state.game.inBonusPhase) return;
+                    dom.btns.stop.classList.remove('confirm-mode', 'bg-red-600', 'text-white', 'border-red-600'); 
+                    dom.btns.stop.innerHTML = '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg> Beenden</span>'; 
+                }, 3000);
+            }
+        }
+
+        // --- GAME LOOP ---
+        function startGame() {
+            saveSettings();
+            
+            const allowed = getAllAllowedLetters();
+            if (allowed.length === 0) {
+                 state.settings.currentLetters = HEFTE[0].buchstaben;
+            } else {
+                 state.settings.currentLetters = allowed;
+            }
+
+            // GET TARGET BASED ON MODE
+            const targetVal = state.settings.mode === 'count' ? state.settings.targetCount : state.settings.targetTime;
+
+            state.game = { runde: 0, richtig: 0, history: new Set(), colorIndex: 0, active: true, finished: false, inBonusPhase: false, letterStats: {}, wordStartTime: 0, startTimeGlobal: Date.now(), timerInterval: null, realWordsPossible: [], isProcessing: false, finalDuration: 0, isVortexing: false };
+            state.settings.currentLetters.forEach(b => state.game.letterStats[b] = 0);
+            state.view = { zoom: 1, targetZoom: 1 };
+            calcPossibleRealWords();
+
+            dom.views.start.classList.add('hidden'); dom.views.start.classList.remove('flex');
+            dom.views.ende.classList.add('hidden'); dom.views.ende.classList.remove('flex');
+            dom.views.spiel.classList.remove('hidden'); dom.views.spiel.classList.add('flex');
+            dom.card.swipe.classList.remove('hidden');
+            dom.misc.losContainer.classList.add('hidden');
+            
+            // Reset Card
+            dom.card.swipe.style.transition = 'none'; dom.card.swipe.style.transform = 'scale(1)'; dom.card.swipe.style.opacity = '1'; dom.card.content.classList.remove('animate-pop-in'); dom.card.overlay.style.opacity = '0';
+
+            // Reset Button Style
+            const btn = dom.btns.stop;
+            btn.innerHTML = '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg> Beenden</span>';
+            btn.className = 'touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0';
+
+            if(state.settings.mode === 'time') {
+                dom.btns.stop.classList.remove('hidden');
+                dom.stats.progressText.parentElement.classList.remove('hidden');
+                dom.stats.progressText.textContent = "0 Wörter";
+            } else {
+                dom.btns.stop.classList.add('hidden');
+                dom.stats.progressText.parentElement.classList.remove('hidden');
+            }
+            
+            if (state.game.timerInterval) clearInterval(state.game.timerInterval);
+            state.game.timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+
+            startPhysics();
+            setTimeout(() => nextCard(true), 50);
+        }
+
+        function calcPossibleRealWords() {
+             const allowedCharsFlat = new Set();
+             state.settings.currentLetters.forEach(token => token.toUpperCase().split('').forEach(char => allowedCharsFlat.add(char)));
+             state.game.realWordsPossible = WOERTERBUCH.filter(silben => {
+                if(silben.s.length < state.settings.minSilben || silben.s.length > state.settings.maxSilben) return false;
+                return silben.s.join('').toUpperCase().split('').every(c => allowedCharsFlat.has(c));
+             });
+        }
+
+        function updateTimer() {
+            const now = Date.now();
+            let diff = 0;
+            const targetVal = state.settings.mode === 'count' ? state.settings.targetCount : state.settings.targetTime;
+
+            if (state.settings.mode === 'count') diff = now - state.game.startTimeGlobal;
+            else {
+                const endTime = state.game.startTimeGlobal + (targetVal * 60 * 1000);
+                diff = endTime - now;
+                if (diff <= 0) { diff = 0; endGameTimeUp(); return; }
+            }
+            const sec = Math.floor(diff / 1000);
+            dom.stats.timer.textContent = `${Math.floor(sec/60).toString().padStart(2,'0')}:${(sec%60).toString().padStart(2,'0')}`;
+            if (state.settings.mode === 'count') {
+                const current = Math.min(state.game.runde + 1, targetVal);
+                dom.stats.progressText.textContent = `Wort ${current} / ${targetVal}`;
+            } else {
+                dom.stats.progressText.textContent = `${state.game.runde} Wörter`;
+            }
+        }
+
+        function showStart() {
+            state.game.active = false;
+            if (state.game.timerInterval) clearInterval(state.game.timerInterval);
+            stopPhysics();
+            dom.views.spiel.classList.add('hidden'); dom.views.ende.classList.add('hidden');
+            dom.views.start.classList.remove('hidden'); dom.views.start.classList.add('flex');
+            dom.card.content.style.backgroundColor = 'white';
+        }
+
+        function endGameTimeUp() {
+            if (state.game.finished) return;
+            if (state.game.timerInterval) clearInterval(state.game.timerInterval);
+            
+            // Setze Dauer für Zeitmodus
+            state.game.finalDuration = state.settings.targetTime * 60 * 1000;
+            
+            state.game.finished = true;
+            state.game.inBonusPhase = true;
+            dom.card.swipe.classList.add('hidden');
+            
+            // Button Update
+            const btn = dom.btns.stop;
+            btn.classList.remove('hidden'); 
+            btn.innerHTML = 'Zum Resultat';
+            btn.className = 'touch-target bg-green-100 text-green-700 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-green-200 transition-all active:scale-95 shrink-0 animate-pulse';
+
+            // --- ÄNDERUNG: KEIN WIRBEL IM ZEITMODUS ---
+            // Stattdessen Physik wach machen für manuelles Platzen
+            if(world) Matter.Composite.allBodies(world).forEach(b => { 
+                Matter.Sleeping.set(b, false); 
+                b.sleepThreshold = -1; 
+            });
+        }
+
+        // --- Endphase vorbereiten (Wörter Modus) ---
+        function prepareEndPhase() {
+            if (state.game.timerInterval) clearInterval(state.game.timerInterval);
+            
+            dom.card.swipe.classList.add('hidden');
+            dom.misc.losContainer.classList.remove('hidden'); // LOS BUTTON ANZEIGEN
+            
+            // Stats
+            state.game.finished = true;
+            state.game.inBonusPhase = true;
+            state.game.finalDuration = Date.now() - state.game.startTimeGlobal;
+            dom.stats.progressText.textContent = "Fertig!";
+
+            // Physics wach halten
+            if(world) Matter.Composite.allBodies(world).forEach(b => { 
+                Matter.Sleeping.set(b, false); 
+                b.sleepThreshold = -1; 
+            });
+        }
+
+        function nextCard() {
+            if (state.settings.mode === 'count' && state.game.runde >= state.settings.targetCount) { 
+                prepareEndPhase(); 
+                return; 
+            }
+            if (state.settings.mode === 'time' && state.game.finished) return;
+
+            updateTimer(); 
+
+            let wortObj = selectWordWithRules();
+            // Fallback object structure
+            if (!wortObj || !wortObj.s) { 
+                // Fantasy word fallback
+                wortObj = { s: generateFantasyWord(determineTargetLength()), a: null };
+            }
+
+            // Check history
+            let versuche = 0;
+            while (state.game.history.has(wortObj.s.join('')) && versuche < 30) { 
+                let cand = selectWordWithRules();
+                if(cand && cand.s) wortObj = cand;
+                else wortObj = { s: generateFantasyWord(determineTargetLength()), a: null };
+                versuche++; 
+            }
+            state.game.history.add(wortObj.s.join(''));
+            
+            const fullString = wortObj.s.join('').toUpperCase();
+            state.settings.currentLetters.forEach(token => {
+                if (fullString.includes(token.toUpperCase())) state.game.letterStats[token] = (state.game.letterStats[token] || 0) + 1;
+            });
+
+            // ARTIKEL ANZEIGE
+            if (state.settings.showArticles && wortObj.a) {
+                // GEÄNDERT: Artikel kleingeschrieben lassen
+                const articleText = wortObj.a.toLowerCase();
+                dom.card.artikel.textContent = articleText;
+                dom.card.artikel.classList.remove('hidden');
+                
+                // GEÄNDERT: Klassen zurücksetzen und Farbe setzen
+                dom.card.artikel.className = 'font-bold leading-none font-learning mr-2 sm:mr-3'; 
+                
+                if (state.settings.farben) {
+                    dom.card.artikel.classList.add('text-blue-600');
+                } else {
+                    dom.card.artikel.classList.add('text-gray-800');
+                }
+                
+            } else {
+                dom.card.artikel.textContent = '';
+                dom.card.artikel.classList.add('hidden');
+            }
+
+            dom.card.text.innerHTML = '';
+            wortObj.s.forEach((silbe, i) => {
+                const span = document.createElement('span');
+                let text = silbe.toLowerCase();
+                // Großschreibung am Anfang des Wortes (Nomen)
+                if (i === 0) text = text.charAt(0).toUpperCase() + text.slice(1);
+                span.textContent = text;
+                
+                if (state.settings.farben) span.className = i % 2 === 0 ? 'text-blue-600' : 'text-red-600';
+                
+                if (state.settings.abstand && i < wortObj.s.length - 1) span.style.marginRight = '0.2em';
+                
+                dom.card.text.appendChild(span);
+            });
+            adjustFontSize();
+
+            const card = dom.card.swipe;
+            card.style.transition = 'none';
+            card.style.transform = 'translate(0,0) rotate(0) scale(0.8)';
+            card.style.opacity = '0';
+            dom.card.overlay.style.opacity = '0';
+            dom.card.content.style.backgroundColor = 'white';
+            
+            requestAnimationFrame(() => {
+                card.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                card.style.transform = 'translate(0,0) rotate(0) scale(1)';
+                card.style.opacity = '1';
+                state.game.wordStartTime = Date.now();
+                state.game.isProcessing = false;
+            });
+        }
+
+        function selectWordWithRules() {
+            // New Condition: No fantasy words for Heft 4 (Index 3)
+            if (state.settings.heftIndex === 3) {
+                 const unusedReal = state.game.realWordsPossible.filter(item => !state.game.history.has(item.s.join('')));
+                 if (unusedReal.length > 0) return unusedReal[Math.floor(Math.random() * unusedReal.length)];
+                 
+                 // If all used, pick any real word (fallback)
+                 if (state.game.realWordsPossible.length > 0) {
+                     return state.game.realWordsPossible[Math.floor(Math.random() * state.game.realWordsPossible.length)];
+                 }
+                 // Absolute fallback
+                 return { s: generateFantasyWord(determineTargetLength()), a: null };
+            }
+
+            const availableRealWords = state.game.realWordsPossible.length;
+            const playedCount = state.game.runde + 1;
+            
+            // Mix fantasy and real words if few words available
+            if (availableRealWords < 20 && playedCount % 3 === 0) return { s: generateFantasyWord(determineTargetLength()), a: null };
+            
+            const unusedReal = state.game.realWordsPossible.filter(item => !state.game.history.has(item.s.join('')));
+            if (unusedReal.length > 0) return unusedReal[Math.floor(Math.random() * unusedReal.length)];
+            
+            return { s: generateFantasyWord(determineTargetLength()), a: null };
+        }
+
+        function determineTargetLength() {
+            const min = state.settings.minSilben; const max = state.settings.maxSilben;
+            if (min === max) return max;
+            return Math.random() < 0.75 ? max : Math.floor(Math.random() * (max - 1 - min + 1)) + min;
+        }
+
+        function generateFantasyWord(length) {
+            const v = state.settings.currentLetters.filter(b => VOKALE_LISTE.includes(b));
+            const k = state.settings.currentLetters.filter(b => !VOKALE_LISTE.includes(b) && !DIPHTHONGE_LISTE.includes(b));
+            const d = state.settings.currentLetters.filter(b => DIPHTHONGE_LISTE.includes(b));
+            if (v.length === 0 && d.length === 0) return ["A".repeat(length).split('')]; 
+            
+            const pick = (pool) => {
+                if (pool.length === 0) return '';
+                let minU = Infinity; pool.forEach(c => { if((state.game.letterStats[c]||0)<minU) minU=state.game.letterStats[c]||0; });
+                const cands = pool.filter(c => (state.game.letterStats[c]||0)===minU);
+                return cands[Math.floor(Math.random()*cands.length)];
+            };
+            
+            const res = [];
+            let lastVowel = null;
+
+            for(let i=0; i<length; i++) {
+                let s='', type='KV', attempts=0, valid=false;
+                do {
+                    if(Math.random()<0.1) type='V'; else type='KV';
+                    s='';
+                    if(type==='KV' && k.length>0) s += pick(k);
+                    if(d.length>0 && Math.random()<0.2) s += pick(d); else if(v.length>0) s += pick(v);
+                    
+                    const currentVowel = s.split('').find(char => VOKALE_LISTE.includes(char) || DIPHTHONGE_LISTE.includes(char));
+
+                    valid = true;
+                    if(i>0 && s===res[i-1]) valid=false;
+                    if(i>0 && currentVowel && lastVowel && currentVowel === lastVowel && Math.random() < 0.8) valid=false;
+                    if(length>=4 && i>1 && s===res[i-2]) valid=false;
+                    if(i>0 && res[i-1].slice(-1).toLowerCase() === s.charAt(0).toLowerCase()) valid=false;
+                    attempts++;
+                } while(!valid && attempts<20);
+                
+                const foundVowel = s.split('').find(char => VOKALE_LISTE.includes(char) || DIPHTHONGE_LISTE.includes(char));
+                if (foundVowel) lastVowel = foundVowel;
+
+                res.push(s);
+            }
+            return res;
+        }
+
+        function handleResult(success) {
+            if(state.game.isProcessing) return;
+            state.game.isProcessing = true;
+            
+            if (success) {
+                state.game.richtig++;
+                const dur = Date.now() - state.game.wordStartTime;
+                let f = 1.0; if(dur<2000) f=2.0; else if(dur>5000) f=0.5;
+                spawnParticles(f);
+            }
+            state.game.runde++;
+            setTimeout(nextCard, 300);
+        }
+
+        // --- SWIPE & PHYSICS ---
+        function initSwipeLogic() {
+            let startX = 0, isDragging = false; const card = dom.card.swipe; const content = dom.card.content;
+            const start = (x) => { if (state.game.finished) return; startX = x; isDragging = true; card.style.transition = 'none'; };
+            const move = (x) => {
+                if (!isDragging) return; const diff = x - startX; card.style.transform = `translate(${diff}px, 0) rotate(${diff * 0.05}deg)`;
+                const op = Math.min(Math.abs(diff) / 150, 0.3);
+                if (diff > 0) { content.style.backgroundColor = `rgba(34, 197, 94, ${0.1 + op * 0.5})`; dom.card.overlay.innerHTML = `<svg class="w-32 h-32 text-green-600 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M5 13l4 4L19 7"></path></svg>`; } 
+                else { content.style.backgroundColor = `rgba(107, 114, 128, ${0.1 + op * 0.5})`; dom.card.overlay.innerHTML = `<svg class="w-32 h-32 text-gray-600 drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M6 18L18 6M6 6l12 12"></path></svg>`; }
+                dom.card.overlay.style.opacity = Math.min(Math.abs(diff) / 100, 1);
+            };
+            const end = (x) => {
+                if (!isDragging) return; isDragging = false; const diff = x - startX;
+                if (Math.abs(diff) > 100) { const dir = diff > 0 ? 1 : -1; card.style.transition = 'transform 0.2s ease-out'; card.style.transform = `translate(${dir * 500}px, 0) rotate(${dir * 45}deg)`; handleResult(dir === 1); } 
+                else { card.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'; card.style.transform = 'translate(0,0) rotate(0)'; content.style.backgroundColor = 'white'; dom.card.overlay.style.opacity = '0'; }
+            };
+            card.addEventListener('touchstart', e => start(e.touches[0].clientX)); window.addEventListener('touchmove', e => move(e.touches[0].clientX)); window.addEventListener('touchend', e => end(e.changedTouches[0].clientX));
+            card.addEventListener('mousedown', e => start(e.clientX)); window.addEventListener('mousemove', e => move(e.clientX)); window.addEventListener('mouseup', e => end(e.clientX));
+        }
+        function startPhysics() {
+            stopPhysics(); const container = document.getElementById('2d-canvas-container');
+            engine = Matter.Engine.create({ enableSleeping: true }); world = engine.world;
+            render = Matter.Render.create({ element: container, engine: engine, options: { width: container.clientWidth, height: container.clientHeight, wireframes: false, background: 'transparent' } });
+            
+            // --- ÄNDERUNG: BOUNDS CHECK & CLAMPING ---
+            Matter.Events.on(engine, 'beforeUpdate', function() {
+                const bodies = Matter.Composite.allBodies(engine.world);
+                const w = render.canvas.width;
+                const h = render.canvas.height;
+                const pad = 30; // Puffer
+
+                for (let i = 0; i < bodies.length; i++) {
+                    const b = bodies[i];
+                    if (b.label === 'wall') continue;
+                    
+                    // Clamping: Wenn Ball zu weit draußen, zurücksetzen
+                    if (b.position.x < -pad) Matter.Body.setPosition(b, { x: w + pad, y: b.position.y });
+                    else if (b.position.x > w + pad) Matter.Body.setPosition(b, { x: -pad, y: b.position.y });
+                    
+                    if (b.position.y > h + pad) {
+                        // Wenn unten raus (sollte nicht passieren wegen Boden), oben rein
+                        Matter.Body.setPosition(b, { x: b.position.x, y: -pad });
+                        Matter.Body.setVelocity(b, { x: b.velocity.x, y: 0 });
+                    }
+                }
+                
+                // If in bonus phase and empty (Time Mode Logic), go to end
+                if (state.game.inBonusPhase && !state.game.isVortexing) { // Nur checken wenn kein Wirbel
+                     const remaining = bodies.filter(b => b.label !== 'wall' && b.label !== 'confetti' && b.label !== 'stirrer').length;
+                     if (remaining === 0 && !state.game.transitioningToEnd) {
+                         state.game.transitioningToEnd = true;
+                         setTimeout(showEnd, 1000);
+                     }
+                }
+            });
+
+            createWalls(container.clientWidth, container.clientHeight);
+
+            (function loop() { if (!engine || !render) return; window.requestAnimationFrame(loop); Matter.Engine.update(engine, 1000/60);
+                const ctx = render.context; ctx.clearRect(0, 0, w = render.canvas.width, h = render.canvas.height); ctx.save();
+                state.view.zoom += (state.view.targetZoom - state.view.zoom) * 0.05;
+                ctx.translate(w/2, h/2); ctx.scale(state.view.zoom, state.view.zoom); ctx.translate(-w/2, -h/2);
+                Matter.Composite.allBodies(world).forEach(b => {
+                    if (b.label === 'wall' || (b.label === 'stirrer' && !b.render.visible)) return;
+                    ctx.beginPath(); ctx.arc(b.position.x, b.position.y, b.circleRadius, 0, 2*Math.PI);
+                    ctx.fillStyle = b.render.fillStyle; ctx.fill();
+                });
+                ctx.restore();
+            })(); physicsActive = true;
+        }
+        function stopPhysics() { engine = null; render = null; physicsActive = false; document.getElementById('2d-canvas-container').innerHTML = ''; }
+        function resizePhysics() { if(!render) return; render.canvas.width = document.getElementById('2d-canvas-container').clientWidth; render.canvas.height = document.getElementById('2d-canvas-container').clientHeight; createWalls(render.canvas.width, render.canvas.height); }
+        function createWalls(w, h) { if(!world) return; Matter.Composite.clear(world, false, true); const th = 200; const opts = { isStatic: true, label: 'wall', friction: 1, restitution: 0 }; Matter.Composite.add(world, [Matter.Bodies.rectangle(w/2, h+th/2, w+200, th, opts), Matter.Bodies.rectangle(-th/2, h/2, th, h*2, opts), Matter.Bodies.rectangle(w+th/2, h/2, th, h*2, opts)]); }
+        
+        function spawnParticles(factor=1) { if(!engine) return; const w = render.canvas.width; const h = render.canvas.height;
+            // Target value now depends on mode
+            const targetVal = state.settings.mode === 'count' ? state.settings.targetCount : state.settings.targetTime;
+            
+            if(state.settings.mode === 'time') {
+                const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -50, 45, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] } });
+                Matter.Composite.add(world, body);
+            } else {
+                let count = Math.floor(((w*h*0.85)/(Math.PI*15*15*3)/targetVal)*1.5 * factor);
+                if(count<10) count=10; if(count>150) count=150;
+                for(let i=0; i<count; i++) {
+                    const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -Math.random()*300-50, 15, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] } });
+                    Matter.Composite.add(world, body);
+                }
+            }
+            state.game.colorIndex = (state.game.colorIndex+1)%RAINBOW_COLORS.length;
+        }
+        function adjustFontSize() { 
+            // Scale based on container size to fit both article and word
+            const container = dom.card.textContainer;
+            const word = dom.card.text;
+            const article = dom.card.artikel;
+            
+            // Initial reset
+            container.style.fontSize = '4rem'; // Start big
+            
+            // Check overflow
+            let size = 4;
+            
+            const checkOverflow = () => {
+                const totalWidth = word.offsetWidth + (article.classList.contains('hidden') ? 0 : article.offsetWidth) + 30; // + gap/padding
+                const containerWidth = container.clientWidth;
+                return totalWidth > containerWidth || container.scrollHeight > container.clientHeight;
+            };
+
+            while (checkOverflow() && size > 1) {
+                size -= 0.2;
+                container.style.fontSize = `${size}rem`;
+            }
+        }
+        
+        function moveStirrer(e) {
+            // Nur erlauben, wenn fertig UND im Count Mode
+            if (!state.game.finished || state.settings.mode !== 'count') return;
+            
+            // Verhindern, dass Touch-Scrolling passiert
+            if(e.type === 'touchmove') e.preventDefault();
+            
+            let x = e.touches ? e.touches[0].clientX : e.clientX; 
+            let y = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            if (!stirrer && engine) { 
+                // GEÄNDERT: Radius 80 für mehr Power, Invisible
+                stirrer = Matter.Bodies.circle(x, y, 80, { 
+                    isStatic: true, 
+                    label: 'stirrer',
+                    render: { visible: false } 
+                }); 
+                Matter.Composite.add(engine.world, stirrer); 
+            } else if (stirrer) {
+                Matter.Body.setPosition(stirrer, {x, y});
+            }
+        }
+        
+        function handleInteractionStart(e) {
+            // Nur im Time Mode erlaubt ODER wenn fertig
+            // Aber "poppen" wollen wir eigentlich nur im Time Mode
+            if(!state.game.finished || state.settings.mode !== 'time') return;
+            
+            const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY;
+            const clicked = Matter.Query.point(Matter.Composite.allBodies(world), {x, y});
+            let removed = false;
+            clicked.forEach(b => { if(!b.isStatic && b.label!=='wall') { Matter.Composite.remove(world, b); createConfetti(b.position.x, b.position.y, b.render.fillStyle); removed=true; } });
+            
+            // Check happens in loop now
+        }
+        function createConfetti(x, y, c) {
+            for(let i=0; i<30; i++) { 
+                const p = Matter.Bodies.circle(x, y, 4, { 
+                    label: 'confetti', 
+                    render: { fillStyle: c }, 
+                    frictionAir: 0.02, 
+                    restitution: 0.6 
+                }); 
+                Matter.Body.setVelocity(p, { x: (Math.random()-0.5)*30, y: (Math.random()-0.5)*30 }); 
+                Matter.Composite.add(world, p); 
+                setTimeout(() => { if(world) Matter.Composite.remove(world, p); }, 1000 + Math.random() * 2000); 
+            }
+        }
+
+        function saveSettings() {
+            // FIX: Use buchstabenList instead of container
+            const checked = dom.inputs.buchstabenList.querySelectorAll('input:checked');
+            const d = { 
+                heftIndex: state.settings.heftIndex, 
+                buchstaben: Array.from(checked).map(c => c.value), 
+                minSilben: parseInt(dom.inputs.min.value), 
+                maxSilben: parseInt(dom.inputs.max.value), 
+                mode: state.settings.mode, 
+                targetCount: state.settings.targetCount,
+                targetTime: state.settings.targetTime,
+                farben: dom.inputs.color.checked, 
+                abstand: dom.inputs.gap.checked,
+                showArticles: dom.inputs.artikel.checked, // NEU
+                manualSyllables: state.settings.manualSyllables 
+            };
+            if (d.minSilben > d.maxSilben) d.minSilben = d.maxSilben;
+            state.settings = d; try { localStorage.setItem('leseAppConf', JSON.stringify(d)); } catch(e) {}
+        }
+        function ladeEinstellungen() {
+            // Default: mode: 'time', manualSyllables: false
+            let d = { heftIndex: 1, buchstaben: ['A','M','O','L','I'], minSilben: 1, maxSilben: 2, mode: 'time', targetCount: 10, targetTime: 5, farben: true, abstand: false, showArticles: false, manualSyllables: false };
+            try { const s = localStorage.getItem('leseAppConf'); if(s) { const p = JSON.parse(s); d = {...d, ...p}; } } catch(e){}
+            state.settings = d; 
+            dom.inputs.min.value = d.minSilben; 
+            dom.inputs.max.value = d.maxSilben; 
+            dom.inputs.color.checked = d.farben; 
+            dom.inputs.gap.checked = d.abstand;
+            dom.inputs.artikel.checked = d.showArticles; // NEU
+            
+            // Set mode and value
+            dom.inputs.modeSelect.value = d.mode;
+            dom.inputs.modeValue.value = d.mode === 'count' ? d.targetCount : d.targetTime;
+            
+            // Switch Mode logic manually
+            // We reuse switchMode logic but without saving yet
+            // Actually ladeEinstellungen populates state.settings, so we are good.
+            
+            selectHeft(parseInt(d.heftIndex || 1));
+        }
+    </script>
+</body>
+</html>
