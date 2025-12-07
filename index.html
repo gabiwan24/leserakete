@@ -10,10 +10,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playwrite+DE+Grund:wght@100..400&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Noto Sans', sans-serif;
             overscroll-behavior: none;
             user-select: none;
             -webkit-user-select: none;
@@ -46,7 +46,6 @@
             padding-bottom: env(safe-area-inset-bottom, 20px);
         }
         
-        /* Grid für die Toggles auf kleinen Screens optimieren */
         .toggle-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -62,67 +61,78 @@
 
     <div id="swipe-feedback-bg" class="absolute inset-0 z-0 pointer-events-none transition-colors duration-150"></div>
 
+    <!-- Overlay für Hinweise -->
+    <div id="game-toast" class="fixed top-1/4 left-0 right-0 z-[80] flex justify-center pointer-events-none opacity-0 transition-all duration-500 transform scale-95">
+        <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-bold text-lg text-center mx-4">
+            <span id="game-toast-text">Hinweis</span>
+        </div>
+    </div>
+
     <div id="app" class="relative w-full h-full z-10 flex flex-col hidden opacity-0 transition-opacity duration-500">
 
         <!-- 1. SETUP (Menü) -->
         <div id="startbildschirm" class="flex flex-col h-full p-4 bg-white z-50 relative overflow-y-auto">
-            <h1 class="text-2xl font-bold text-center text-blue-600 mb-2 mt-1 shrink-0 font-learning">LeseRakete 🚀</h1>
+            <!-- TITEL: text-3xl -->
+            <h1 class="text-3xl font-bold text-center text-blue-600 mb-4 mt-2 shrink-0 font-learning">LeseRakete 🚀</h1>
 
-            <div class="flex-grow flex flex-col gap-2 pb-20 px-1">
+            <div class="flex-grow flex flex-col gap-3 pb-20 px-1">
                 
                 <!-- Optionen -->
-                <div class="bg-gray-50 rounded-xl p-2 border border-gray-200 shrink-0 flex flex-col gap-3">
+                <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 shrink-0 flex flex-col gap-4">
                     
                     <!-- Silben Range -->
-                    <div class="flex items-center justify-center gap-1.5 text-sm font-bold text-blue-600 whitespace-nowrap">
+                    <!-- TEXT: text-base, INPUTS: text-xl -->
+                    <div class="flex items-center justify-center gap-2 text-base font-bold text-blue-600 whitespace-nowrap">
                         <span>Mit Wörtern mit</span>
-                        <input type="number" id="min-silben" value="1" min="1" max="5" class="w-8 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                        <input type="number" id="min-silben" value="1" min="1" max="5" class="w-10 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-xl focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
                         <span>bis</span>
-                        <input type="number" id="max-silben" value="2" min="1" max="5" class="w-8 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                        <input type="number" id="max-silben" value="2" min="1" max="5" class="w-10 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-xl focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
                         <span>Silben</span>
                     </div>
 
                     <!-- Modus Auswahl (Dropdown) -->
                     <div class="flex flex-col gap-1">
-                        <label class="text-xs font-bold text-gray-400 uppercase ml-1">Modus</label>
-                        <div class="flex items-center bg-white border-2 border-gray-200 rounded-lg p-2 shadow-sm">
-                            <!-- Zahl Input -->
-                            <input type="number" id="mode-value" value="5" min="1" max="60" class="w-12 text-center text-xl font-bold text-red-600 outline-none border-r border-gray-100 mr-2 bg-transparent" onfocus="this.select()" onchange="updateModeValue(this.value)">
+                        <!-- LABEL: text-sm -->
+                        <label class="text-sm font-bold text-gray-400 uppercase ml-1 text-center">Modus</label>
+                        <div class="flex items-center justify-center gap-3 bg-white border-2 border-gray-200 rounded-lg p-3 shadow-sm">
+                            <!-- Zahl Input: text-3xl -->
+                            <input type="number" id="mode-value" value="5" min="1" max="60" class="w-20 text-center text-3xl font-bold text-red-600 outline-none border-b border-gray-200 bg-transparent" onfocus="this.select()" onchange="updateModeValue(this.value)">
                             
-                            <!-- Dropdown -->
-                            <select id="mode-select" class="w-full bg-transparent font-bold text-blue-600 outline-none text-base touch-target" onchange="switchMode(this.value)">
-                                <option value="time">Minuten lang lesen</option>
+                            <!-- Dropdown: text-xl -->
+                            <select id="mode-select" class="bg-transparent font-bold text-blue-600 outline-none text-xl touch-target text-center" onchange="switchMode(this.value)">
+                                <option value="time">Minuten lesen</option>
                                 <option value="count">Wörter lesen</option>
                             </select>
                         </div>
                     </div>
                     
                     <!-- Toggles -->
+                    <!-- TEXT: text-xs (vereinheitlicht) -->
                     <div class="toggle-grid mt-1">
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
-                            <input id="silben-faerben" type="checkbox" checked class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Rot-Blau<br>Silben</span>
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
+                            <input id="silben-faerben" type="checkbox" checked class="h-5 w-5 text-blue-600 rounded pointer-events-none">
+                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Rot-Blau Silben</span>
                         </label>
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
-                            <input id="silben-abstand" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Abstand<br>zw. Silben</span>
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
+                            <input id="silben-abstand" type="checkbox" class="h-5 w-5 text-blue-600 rounded pointer-events-none">
+                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Silbenabstand</span>
                         </label>
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
-                            <input id="artikel-anzeigen" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                            <span class="text-[10px] font-bold text-gray-600 pointer-events-none text-center leading-tight">Artikel<br>anzeigen</span>
+                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
+                            <input id="artikel-anzeigen" type="checkbox" class="h-5 w-5 text-blue-600 rounded pointer-events-none">
+                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Artikel zeigen</span>
                         </label>
                     </div>
                 </div>
 
                 <!-- Lernstand (Akkordeon Liste) -->
-                <div class="flex flex-col gap-1.5 overflow-y-auto" id="heft-list">
+                <div class="flex flex-col gap-2 overflow-y-auto" id="heft-list">
                     <!-- Wird per JS generiert -->
                 </div>
                 
                 <!-- Versteckter Container für Buchstaben -->
                 <div id="buchstaben-wrapper" class="hidden">
-                    <div class="p-2 bg-blue-50/50 border-t border-blue-100">
-                        <div class="flex justify-between items-center mb-1">
+                    <div class="p-3 bg-blue-50/50 border-t border-blue-100">
+                        <div class="flex justify-between items-center mb-2">
                             <span class="text-xs font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
                             <button type="button" id="btn-select-all" class="touch-target text-xs text-blue-600 font-semibold underline px-2 py-1">Alle</button>
                         </div>
@@ -132,8 +142,9 @@
 
             </div>
 
+            <!-- BUTTON: text-2xl -->
             <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-100 safe-area-pb z-50">
-                <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">
                     Starten
                 </button>
             </div>
@@ -145,23 +156,25 @@
             <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50 pointer-events-none">
                 
                 <!-- Linke Gruppe: Button, Fortschritt, Zeit -->
-                <div class="flex items-center gap-2 pointer-events-auto">
-                    <button id="stop-button" class="touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0">
+                <div class="flex items-center gap-3 pointer-events-auto">
+                    <!-- BUTTON: text-sm -->
+                    <button id="stop-button" class="touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0">
                         <span class="flex items-center gap-1">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
                             Beenden
                         </span>
                     </button>
                     
-                    <div id="fortschritt-anzeige" class="text-blue-600 font-mono font-bold text-sm sm:text-lg bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">
+                    <!-- ANZEIGEN: text-xl -->
+                    <div id="fortschritt-anzeige" class="text-blue-600 font-mono font-bold text-xl bg-white/90 backdrop-blur px-4 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">
                         <span id="fortschritt-text">1 / 10</span>
                     </div>
                     
-                    <div id="timer-display" class="text-blue-600 font-mono font-bold text-sm sm:text-lg bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">00:00</div>
+                    <div id="timer-display" class="text-blue-600 font-mono font-bold text-xl bg-white/90 backdrop-blur px-4 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">00:00</div>
                 </div>
 
                 <!-- Rechte Gruppe: Einstellungen -->
-                <button id="einstellungen-button" class="touch-target text-gray-400 hover:text-blue-600 bg-white/90 backdrop-blur p-2 rounded-full shadow-sm border border-gray-100 pointer-events-auto active:scale-90 transition-transform ml-2">
+                <button id="einstellungen-button" class="touch-target text-gray-400 hover:text-blue-600 bg-white/90 backdrop-blur p-3 rounded-full shadow-sm border border-gray-100 pointer-events-auto active:scale-90 transition-transform ml-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                 </button>
             </div>
@@ -174,9 +187,9 @@
                 <div id="card-swipe-layer" class="w-full max-w-xs aspect-[3/2] pointer-events-auto cursor-grab active:cursor-grabbing touch-none select-none will-change-transform relative">
                     <div id="card-content-layer" class="w-full h-full bg-white rounded-3xl card-shadow border border-gray-200 flex items-center justify-center relative overflow-hidden bg-white select-none transition-colors duration-150">
                         
-                        <!-- WORT ANZEIGE CONTAINER (wird skaliert) -->
-                        <div id="wort-anzeige-container" class="w-full h-full flex flex-row items-center justify-center p-4 relative z-10 pointer-events-none gap-2 sm:gap-4">
-                            <!-- Artikel (Schriftgröße identisch zum Wort, hier nur hidden toggle) -->
+                        <!-- WORT ANZEIGE CONTAINER (wird skaliert) - PADDING ERHÖHT (px-8 bis px-12) -->
+                        <div id="wort-anzeige-container" class="w-full h-full flex flex-row items-center justify-center px-8 sm:px-12 py-4 relative z-10 pointer-events-none gap-2 sm:gap-4">
+                            <!-- Artikel -->
                             <span id="artikel-anzeige" class="hidden font-bold leading-none font-learning text-gray-800"></span>
                             <!-- Wort -->
                             <div id="wort-anzeige" class="font-bold whitespace-nowrap select-none text-gray-800 leading-none font-learning flex"></div>
@@ -195,15 +208,17 @@
 
         <!-- 3. AUSWERTUNG -->
         <div id="auswertung" class="hidden absolute inset-0 z-[60] bg-white flex flex-col justify-center items-center p-6 select-none">
-            <!-- Dynamischer Titel -->
-            <h2 id="auswertung-titel" class="text-3xl md:text-4xl font-bold text-blue-600 mb-6 drop-shadow-sm font-learning text-center px-2">Super!</h2>
+            <!-- TITEL: text-4xl -->
+            <h2 id="auswertung-titel" class="text-4xl font-bold text-blue-600 mb-8 drop-shadow-sm font-learning text-center px-2">Super!</h2>
             
             <div id="tier-leiter" class="flex flex-row items-end justify-center gap-4 mb-8 w-full max-w-sm h-24"></div>
 
-            <div id="result-box" class="bg-gray-50 p-4 rounded-2xl border border-gray-100 mb-6 w-full max-w-xs text-center shadow-sm">
+            <div id="result-box" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-8 w-full max-w-xs text-center shadow-sm">
                 <!-- Inhalt wird dynamisch gefüllt -->
             </div>
-            <button id="zurueck-button" class="touch-target w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">Nochmal spielen</button>
+            
+            <!-- BUTTON: text-2xl -->
+            <button id="zurueck-button" class="touch-target w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">Nochmal spielen</button>
         </div>
     </div>
 
@@ -211,9 +226,9 @@
         // --- DATEN ---
         const HEFTE = [
             { name: "1", letters: "M, A, L, I, O, S", suffix: "", buchstaben: ['M', 'A', 'L', 'I', 'O', 'S'], min: 1, max: 2 },
-            { name: "2", letters: "E, N, D, U, P, K", suffix: "(inkl. Heft 1)", buchstaben: ['E', 'N', 'D', 'U', 'P', 'K'], min: 2, max: 3 },
-            { name: "3", letters: "H, T, R, F, W, Ei, Au, Eu", suffix: "(inkl. Heft 1 und 2)", buchstaben: ['H', 'T', 'R', 'F', 'W', 'Ei', 'Au', 'Eu'], min: 2, max: 4 },
-            { name: "4", letters: "B, G, J, Z, Ch, Sch, Ck, Ä, Ö, Ü, V, X, Y, Q", suffix: "(inkl. Heft 1, 2 und 3)", buchstaben: ['B', 'G', 'J', 'Z', 'Ch', 'Sch', 'Ck', 'Ä', 'Ö', 'Ü', 'V', 'X', 'Y', 'Q'], min: 2, max: 4 }
+            { name: "2", letters: "E, N, D, U, P, K", suffix: "(inkl. Stufe 1)", buchstaben: ['E', 'N', 'D', 'U', 'P', 'K'], min: 2, max: 3 },
+            { name: "3", letters: "H, T, R, F, W, Ei, Au, Eu", suffix: "(inkl. Stufe 1 und 2)", buchstaben: ['H', 'T', 'R', 'F', 'W', 'Ei', 'Au', 'Eu'], min: 2, max: 4 },
+            { name: "4", letters: "B, G, J, Z, Ch, Sch, Ck, Ä, Ö, Ü, V, X, Y, Q", suffix: "(inkl. Stufe 1, 2 und 3)", buchstaben: ['B', 'G', 'J', 'Z', 'Ch', 'Sch', 'Ck', 'Ä', 'Ö', 'Ü', 'V', 'X', 'Y', 'Q'], min: 2, max: 4 }
         ];
 
         const ANIMALS = [
@@ -230,14 +245,14 @@
         
         // s: Silben, a: Artikel (optional)
         const WOERTERBUCH = [
-            // HEFT 1
+            // STUFE 1
             {s:['Ma','ma'], a:'die'}, {s:['Mi','mi'], a:'die'}, {s:['O','mi'], a:'die'}, {s:['O','ma'], a:'die'}, {s:['A','li'], a:'der'},
             {s:['Li','lo'], a:'die'}, {s:['Lo','la'], a:'die'}, {s:['Li','sa'], a:'die'}, {s:['Sis','si'], a:'die'}, {s:['Mo','mo'], a:'der'},
             {s:['La','ma'], a:'das'}, {s:['Li','la'], a:'das'}, {s:['Sa','la','mi'], a:'die'}, {s:['Li','mo'], a:'die'}, {s:['Si','lo'], a:'das'},
             {s:['So','lo'], a:'das'}, {s:['Ma','l'], a:'das'}, {s:['Lo','s'], a:'das'}, {s:['Mi','mi','mi'], a:'das'},
             {s:['li','la']}, {s:['lo','s']}, {s:['so','la','la']}, {s:['ma','l']}, {s:['soll']}, {s:['lass']}, {s:['So','ma','li','a']},
 
-            // HEFT 2
+            // STUFE 2
             {s:['Pan','da'], a:'der'}, {s:['En','te'], a:'die'}, {s:['Pu','del'], a:'der'}, {s:['Ka','mel'], a:'das'}, {s:['Pe','li','kan'], a:'der'},
             {s:['Lam','m'], a:'das'}, {s:['Pu','te'], a:'die'}, {s:['An','ti','lo','pe'], a:'die'}, {s:['Ka','ka','du'], a:'der'}, {s:['Sa','lat'], a:'der'},
             {s:['To','ma','te'], a:'die'}, {s:['Me','lo','ne'], a:'die'}, {s:['Ka','ka','o'], a:'der'}, {s:['Nu','del'], a:'die'}, {s:['A','na','nas'], a:'die'},
@@ -249,7 +264,7 @@
             {s:['nett']}, {s:['dumm']}, {s:['kalt']}, {s:['nass']}, {s:['laut']}, {s:['mun','ter']}, {s:['dan','kend']}, {s:['rund']}, {s:['e','del']}, {s:['toll']}, {s:['satt']},
             {s:['tun']}, {s:['tunkt']}, {s:['putzt']}, {s:['isst']}, {s:['sen','det']}, {s:['dehnt']}, {s:['en','det']}, {s:['kannst']}, {s:['ma','len']}, {s:['le','sen']}, {s:['tur','nen']}, {s:['sein']},
 
-            // HEFT 3
+            // STUFE 3
             {s:['Eis'], a:'das'}, {s:['Maus'], a:'die'}, {s:['Haus'], a:'das'}, {s:['Au','to'], a:'das'}, {s:['Eu','le'], a:'die'}, {s:['Sei','fe'], a:'die'},
             {s:['Lei','ter'], a:'die'}, {s:['Mau','er'], a:'die'}, {s:['Feu','er'], a:'das'}, {s:['Eu','ro'], a:'der'}, {s:['Rei','se'], a:'die'}, {s:['A','mei','se'], a:'die'},
             {s:['Haus','tier'], a:'das'}, {s:['Ho','se'], a:'die'}, {s:['Hut'], a:'der'}, {s:['Hof'], a:'der'}, {s:['Fo','to'], a:'das'}, {s:['So','fa'], a:'das'},
@@ -259,7 +274,7 @@
             {s:['lei','se']}, {s:['teu','er']}, {s:['neu']}, {s:['froh']}, {s:['hart']}, {s:['wahr']}, {s:['hell']}, {s:['warm']}, {s:['rot']}, {s:['weit']}, {s:['frei']}, {s:['flau']}, {s:['treu']},
             {s:['reist']}, {s:['läuft']}, {s:['weint']}, {s:['ruft']}, {s:['hört']}, {s:['haut']}, {s:['kauft']}, {s:['freut']}, {s:['hofft']}, {s:['wärmt']}, {s:['wart']}, {s:['fah','re']}, {s:['ru','fen']}, {s:['ho','len']},
 
-            // HEFT 4
+            // STUFE 4
             {s:['Bär'], a:'der'}, {s:['Kä','se'], a:'der'}, {s:['Öl'], a:'das'}, {s:['Tür'], a:'die'}, {s:['Müll'], a:'der'}, {s:['Lö','we'], a:'der'}, {s:['Schü','ler'], a:'der'}, {s:['Schu','le'], a:'die'},
             {s:['Tisch'], a:'der'}, {s:['Fisch'], a:'der'}, {s:['Schiff'], a:'das'}, {s:['Schaf'], a:'das'}, {s:['Ta','sche'], a:'die'}, {s:['Wä','sche'], a:'die'}, {s:['Mäd','chen'], a:'das'}, {s:['Kö','nig'], a:'der'},
             {s:['Ü','bung'], a:'die'}, {s:['Scho','ko','la','de'], a:'die'}, {s:['Schmet','ter','ling'], a:'der'}, {s:['Re','gen','schirm'], a:'der'},
@@ -312,7 +327,8 @@
             btns: { start: document.getElementById('start-button'), settings: document.getElementById('einstellungen-button'), back: document.getElementById('zurueck-button'), stop: document.getElementById('stop-button'), los: document.getElementById('los-button') },
             card: { swipe: document.getElementById('card-swipe-layer'), content: document.getElementById('card-content-layer'), textContainer: document.getElementById('wort-anzeige-container'), text: document.getElementById('wort-anzeige'), artikel: document.getElementById('artikel-anzeige'), overlay: document.getElementById('card-overlay'), bg: document.getElementById('swipe-feedback-bg') },
             stats: { progressText: document.getElementById('fortschritt-text'), timer: document.getElementById('timer-display'), animals: document.getElementById('tier-leiter'), resultBox: document.getElementById('result-box') },
-            misc: { losContainer: document.getElementById('los-button-container') }
+            misc: { losContainer: document.getElementById('los-button-container') },
+            toast: { el: document.getElementById('game-toast'), text: document.getElementById('game-toast-text') }
         };
 
         let engine, render, runner, stirrer, mouseConstraint, physicsActive = false;
@@ -351,6 +367,16 @@
             }
         });
 
+        // --- HINWEIS (TOAST) ---
+        function showOverlayMessage(msg) {
+            if(!dom.toast.el) return;
+            dom.toast.text.textContent = msg;
+            dom.toast.el.classList.remove('opacity-0', 'scale-95');
+            setTimeout(() => {
+                dom.toast.el.classList.add('opacity-0', 'scale-95');
+            }, 3000);
+        }
+
         // DEFINIERE DIESE FUNKTIONEN ZUERST
         function showEnd() {
             state.game.active = false; stopPhysics();
@@ -373,19 +399,19 @@
                 </div>
             `).join(''); 
 
-            // RESULT TEXT UPDATE
+            // RESULT TEXT UPDATE - MIT SCHRIFTGRÖßEN ANPASSUNG
             if (state.settings.mode === 'count') {
                 const wortLabel = state.game.richtig === 1 ? "Wort" : "Wörter";
                 dom.stats.resultBox.innerHTML = `
-                    <p class="text-2xl font-bold text-gray-800 mb-2">Du hast <span class="text-blue-600 text-3xl">${state.game.richtig}</span> ${wortLabel} gelesen!</p>
-                    <p class="text-base text-gray-500">Du hast dafür <span class="font-mono text-gray-800 font-bold">${formattedTime}</span> Minuten gebraucht.</p>
+                    <p class="text-3xl font-bold text-gray-800 mb-4">Du hast <span class="text-blue-600 text-4xl">${state.game.richtig}</span> ${wortLabel} gelesen!</p>
+                    <p class="text-lg text-gray-500">Du hast dafür <span class="font-mono text-gray-800 font-bold">${formattedTime}</span> Minuten gebraucht.</p>
                 `;
             } else {
                 const wortLabel = state.game.richtig === 1 ? "Wort" : "Wörter";
                 dom.stats.resultBox.innerHTML = `
-                    <p class="text-gray-500 text-sm mb-1">Ergebnis</p>
-                    <p class="text-3xl font-bold text-gray-800 mb-1"><span class="text-green-600">${state.game.richtig}</span> ${wortLabel}</p>
-                    <p class="text-base text-gray-500">Zeit: <span class="font-mono text-gray-700">${formattedTime}</span></p>
+                    <p class="text-gray-500 text-base mb-2">Ergebnis</p>
+                    <p class="text-4xl font-bold text-gray-800 mb-2"><span class="text-green-600">${state.game.richtig}</span> ${wortLabel}</p>
+                    <p class="text-lg text-gray-500">Zeit: <span class="font-mono text-gray-700">${formattedTime}</span></p>
                 `;
             }
         }
@@ -446,11 +472,10 @@
         function initHeftList() {
             dom.inputs.heftList.innerHTML = HEFTE.map((h, i) => `
                 <div class="heft-wrapper relative" id="heft-wrapper-${i}">
-                    <button class="heft-btn touch-target w-full text-left py-2 px-3 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm bg-white z-10" onclick="selectHeft(${i})">
+                    <button class="heft-btn touch-target w-full text-left py-3 px-4 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm bg-white z-10" onclick="selectHeft(${i})">
                         <div class="pointer-events-none">
-                            <span class="font-bold text-gray-800">Heft ${h.name}</span>
-                            <span class="text-gray-600 font-medium"> - ${h.letters}</span>
-                            ${h.suffix ? `<span class="text-xs text-gray-400 ml-1 whitespace-nowrap">${h.suffix}</span>` : ''}
+                            <span class="font-bold text-gray-800 text-lg">Stufe ${h.name}</span>
+                            ${h.suffix ? `<span class="text-sm text-gray-400 ml-2 whitespace-nowrap">${h.suffix}</span>` : ''}
                         </div>
                         <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-50 transition-opacity z-0 pointer-events-none"></div>
                     </button>
@@ -471,7 +496,7 @@
             const buttons = dom.inputs.heftList.querySelectorAll('.heft-btn');
 
             buttons.forEach((btn, i) => {
-                btn.className = 'heft-btn touch-target w-full text-left py-2 px-3 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm';
+                btn.className = 'heft-btn touch-target w-full text-left py-3 px-4 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm';
                 if (i === index) {
                     btn.classList.add('border-blue-600', 'bg-blue-50', 'shadow-md', 'ring-1', 'ring-blue-200');
                     if(dom.inputs.buchstabenWrapper) {
@@ -585,7 +610,7 @@
             // Reset Button Style
             const btn = dom.btns.stop;
             btn.innerHTML = '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg> Beenden</span>';
-            btn.className = 'touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0';
+            btn.className = 'touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0';
 
             if(state.settings.mode === 'time') {
                 dom.btns.stop.classList.remove('hidden');
@@ -602,6 +627,9 @@
 
             startPhysics();
             setTimeout(() => nextCard(true), 50);
+
+            // SHOW TOAST AT START
+            showOverlayMessage("Richtig gelesene Wörter nach rechts wischen.");
         }
 
         function calcPossibleRealWords() {
@@ -658,7 +686,7 @@
             const btn = dom.btns.stop;
             btn.classList.remove('hidden'); 
             btn.innerHTML = 'Zum Resultat';
-            btn.className = 'touch-target bg-green-100 text-green-700 font-bold text-xs px-3 py-2 rounded-full shadow-sm border border-green-200 transition-all active:scale-95 shrink-0 animate-pulse';
+            btn.className = 'touch-target bg-green-100 text-green-700 font-bold text-sm px-4 py-2 rounded-full shadow-sm border border-green-200 transition-all active:scale-95 shrink-0 animate-pulse';
 
             // --- ÄNDERUNG: KEIN WIRBEL IM ZEITMODUS ---
             // Stattdessen Physik wach machen für manuelles Platzen
@@ -666,6 +694,9 @@
                 Matter.Sleeping.set(b, false); 
                 b.sleepThreshold = -1; 
             });
+
+            // TOAST MESSAGE TIME MODE
+            showOverlayMessage("Tippe die Kugeln an!");
         }
 
         // --- Endphase vorbereiten (Wörter Modus) ---
@@ -686,6 +717,9 @@
                 Matter.Sleeping.set(b, false); 
                 b.sleepThreshold = -1; 
             });
+
+            // TOAST MESSAGE COUNT MODE
+            showOverlayMessage("Unordnung machen!");
         }
 
         function nextCard() {
@@ -915,6 +949,30 @@
                      }
                 }
             });
+            
+            // --- ÄNDERUNG: COLLISION START FOR VIBRATION ---
+            Matter.Events.on(engine, 'collisionStart', (event) => {
+                if (state.settings.mode !== 'time') return; // Only time mode
+
+                event.pairs.forEach((pair) => {
+                    const bodyA = pair.bodyA;
+                    const bodyB = pair.bodyB;
+                    
+                    let ball = null;
+                    let floor = null;
+
+                    if (bodyA.isFloor) floor = bodyA;
+                    else if (!bodyA.isStatic && bodyA.label !== 'wall') ball = bodyA;
+
+                    if (bodyB.isFloor) floor = bodyB;
+                    else if (!bodyB.isStatic && bodyB.label !== 'wall') ball = bodyB;
+
+                    if (ball && floor && !ball.hasHitFloor) {
+                        ball.hasHitFloor = true;
+                        if (navigator.vibrate) navigator.vibrate(15); 
+                    }
+                });
+            });
 
             createWalls(container.clientWidth, container.clientHeight);
 
@@ -932,7 +990,20 @@
         }
         function stopPhysics() { engine = null; render = null; physicsActive = false; document.getElementById('2d-canvas-container').innerHTML = ''; }
         function resizePhysics() { if(!render) return; render.canvas.width = document.getElementById('2d-canvas-container').clientWidth; render.canvas.height = document.getElementById('2d-canvas-container').clientHeight; createWalls(render.canvas.width, render.canvas.height); }
-        function createWalls(w, h) { if(!world) return; Matter.Composite.clear(world, false, true); const th = 200; const opts = { isStatic: true, label: 'wall', friction: 1, restitution: 0 }; Matter.Composite.add(world, [Matter.Bodies.rectangle(w/2, h+th/2, w+200, th, opts), Matter.Bodies.rectangle(-th/2, h/2, th, h*2, opts), Matter.Bodies.rectangle(w+th/2, h/2, th, h*2, opts)]); }
+        
+        // UPDATE CREATEWALLS TO TAG FLOOR
+        function createWalls(w, h) { 
+            if(!world) return; 
+            Matter.Composite.clear(world, false, true); 
+            const th = 200; 
+            const opts = { isStatic: true, label: 'wall', friction: 1, restitution: 0 }; 
+            // Bottom wall gets isFloor tag
+            Matter.Composite.add(world, [
+                Matter.Bodies.rectangle(w/2, h+th/2, w+200, th, { ...opts, isFloor: true }), 
+                Matter.Bodies.rectangle(-th/2, h/2, th, h*2, opts), 
+                Matter.Bodies.rectangle(w+th/2, h/2, th, h*2, opts)
+            ]); 
+        }
         
         function spawnParticles(factor=1) { if(!engine) return; const w = render.canvas.width; const h = render.canvas.height;
             // Target value now depends on mode
@@ -1006,7 +1077,17 @@
             const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY;
             const clicked = Matter.Query.point(Matter.Composite.allBodies(world), {x, y});
             let removed = false;
-            clicked.forEach(b => { if(!b.isStatic && b.label!=='wall') { Matter.Composite.remove(world, b); createConfetti(b.position.x, b.position.y, b.render.fillStyle); removed=true; } });
+            clicked.forEach(b => { 
+                if(!b.isStatic && b.label!=='wall') { 
+                    Matter.Composite.remove(world, b); 
+                    createConfetti(b.position.x, b.position.y, b.render.fillStyle); 
+                    removed=true; 
+                } 
+            });
+            
+            if (removed && navigator.vibrate) {
+                 navigator.vibrate(40); // HAPTIC FEEDBACK POP
+            }
             
             // Check happens in loop now
         }
