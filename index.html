@@ -22,6 +22,8 @@
 
         #spiel {
             touch-action: none;
+            /* Für weiche Übergänge */
+            transition: opacity 1s ease-in-out;
         }
         
         .font-learning { font-family: 'Playwrite DE Grund', cursive; }
@@ -52,14 +54,9 @@
             gap: 0.5rem;
         }
 
-        /* Custom Scrollbar hide for letter area */
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-        }
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
+        /* Scrollbar hiding */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="w-screen h-[100dvh] overflow-hidden flex flex-col select-none">
@@ -70,31 +67,41 @@
 
     <div id="swipe-feedback-bg" class="absolute inset-0 z-0 pointer-events-none transition-colors duration-150"></div>
 
-    <!-- Overlay für Hinweise -->
+    <!-- Overlay für Hinweise (Toast) -->
     <div id="game-toast" class="fixed top-1/4 left-0 right-0 z-[80] flex justify-center pointer-events-none opacity-0 transition-all duration-500 transform scale-95">
-        <div class="bg-blue-600 text-white px-6 py-3 rounded-full shadow-xl font-bold text-lg text-center mx-4">
+        <div class="bg-blue-600/90 backdrop-blur text-white px-6 py-4 rounded-2xl shadow-xl font-bold text-xl text-center mx-4 border border-blue-400">
             <span id="game-toast-text">Hinweis</span>
         </div>
+    </div>
+
+    <!-- Overlay für Wörterbuch -->
+    <div id="dictionary-overlay" class="fixed inset-0 z-[90] bg-white hidden flex-col">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+            <h2 class="text-2xl font-bold text-blue-600 font-learning">Wörterbuch 📖</h2>
+            <button onclick="toggleDictionary(false)" class="text-gray-500 hover:text-red-500 p-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div id="dictionary-content" class="flex-grow overflow-y-auto p-4 space-y-6"></div>
     </div>
 
     <div id="app" class="relative w-full h-full z-10 flex flex-col hidden opacity-0 transition-opacity duration-500">
 
         <!-- 1. SETUP (Menü) -->
-        <!-- Flex Container für Sticky Footer Layout -->
         <div id="startbildschirm" class="flex flex-col h-full bg-white z-50">
             
-            <!-- SCROLLABLE CONTENT (Oben) -->
+            <!-- SCROLLABLE CONTENT -->
             <div class="flex-grow overflow-y-auto p-4 pb-2">
-                <h1 class="text-3xl font-bold text-center text-blue-600 mb-4 shrink-0 font-learning">LeseRakete 🚀</h1>
+                <div class="flex justify-center items-center mb-4 relative">
+                    <h1 class="text-3xl font-bold text-blue-600 shrink-0 font-learning">LeseRakete 🚀</h1>
+                    <button onclick="toggleDictionary(true)" class="absolute right-0 top-1/2 -translate-y-1/2 text-2xl p-2 hover:scale-110 transition-transform">📖</button>
+                </div>
 
                 <div class="flex flex-col gap-3">
                     
-                    <!-- Optionen & Modus KOMPAKT -->
+                    <!-- Optionen & Modus -->
                     <div class="bg-gray-50 rounded-xl p-2 border border-gray-200 shrink-0 flex flex-col gap-2">
-                        
-                        <!-- Zeile 1: Silben & Modus nebeneinander -->
                         <div class="flex gap-2">
-                            <!-- Silben -->
                             <div class="flex-1 flex flex-col justify-center items-center bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
                                 <span class="text-[10px] font-bold text-gray-400 uppercase mb-1">Silben</span>
                                 <div class="flex items-center justify-center gap-1 text-base font-bold text-blue-600">
@@ -103,8 +110,6 @@
                                     <input type="number" id="max-silben" value="2" min="1" max="5" class="w-6 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
                                 </div>
                             </div>
-
-                            <!-- Modus -->
                             <div class="flex-[1.5] flex flex-col justify-center items-center bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
                                 <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Modus</label>
                                 <div class="flex items-center justify-center gap-2 w-full">
@@ -117,120 +122,87 @@
                             </div>
                         </div>
                         
-                        <!-- Toggles -->
                         <div class="toggle-grid">
+                            <!-- GEÄNDERT: Texte angepasst -->
                             <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
                                 <input id="silben-faerben" type="checkbox" checked class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Rot-Blau</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Rot-Blau-Silben</span>
                             </label>
                             <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
                                 <input id="silben-abstand" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Abstand</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Abstand zw. Silben</span>
                             </label>
                             <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
                                 <input id="artikel-anzeigen" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
-                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Artikel</span>
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Nomen mit Artikeln</span>
                             </label>
                         </div>
                     </div>
 
-                    <!-- Stufen Auswahl (GRID) -->
-                    <div class="grid grid-cols-2 gap-3" id="heft-grid">
-                        <!-- Wird per JS generiert -->
+                    <!-- Stufen Auswahl -->
+                    <div class="grid grid-cols-2 gap-3" id="heft-grid"></div>
+                    
+                    <!-- Buchstaben Auswahl im Flow -->
+                    <div id="buchstaben-wrapper" class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 mt-1">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-[10px] font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
+                            <button type="button" id="btn-select-all" class="touch-target text-[10px] text-blue-600 font-semibold underline px-2 py-1">Alle der Stufe</button>
+                        </div>
+                        <div id="buchstaben-list-inner" class="grid grid-cols-10 gap-1"></div>
                     </div>
 
                 </div>
             </div>
 
-            <!-- FIXED FOOTER (Sticky) -->
-            <div class="bg-white border-t border-gray-100 safe-area-pb z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
-                
-                <!-- Buchstaben Container (Immer sichtbar) -->
-                <div id="buchstaben-wrapper" class="px-4 py-2 bg-blue-50/50">
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
-                        <button type="button" id="btn-select-all" class="touch-target text-[10px] text-blue-600 font-semibold underline px-2 py-1">Alle der Stufe</button>
-                    </div>
-                    <div id="buchstaben-list-inner" class="grid grid-cols-7 gap-1 max-h-24 overflow-y-auto scrollbar-hide"></div>
-                </div>
-
-                <!-- Start Button -->
-                <div class="p-4 pt-2">
-                    <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
-                        Starten
-                    </button>
-                </div>
+            <!-- Sticky Footer -->
+            <div class="bg-white border-t border-gray-100 safe-area-pb z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] p-4">
+                <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                    Starten
+                </button>
             </div>
         </div>
 
         <!-- 2. SPIELFELD -->
-        <div id="spiel" class="hidden w-full h-full relative flex flex-col">
-            <!-- Header Bar -->
+        <div id="spiel" class="hidden w-full h-full relative flex flex-col opacity-100">
             <div class="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-50 pointer-events-none">
-                
-                <!-- Linke Gruppe: Button, Fortschritt, Zeit -->
                 <div class="flex items-center gap-3 pointer-events-auto">
-                    <!-- BUTTON: text-sm -->
                     <button id="stop-button" class="touch-target hidden bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-sm px-4 py-2 rounded-full shadow-sm border border-gray-200 transition-all active:scale-95 shrink-0">
-                        <span class="flex items-center gap-1">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            Beenden
-                        </span>
+                        <span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path></svg> Beenden</span>
                     </button>
-                    
-                    <!-- ANZEIGEN: text-xl -->
                     <div id="fortschritt-anzeige" class="text-blue-600 font-mono font-bold text-xl bg-white/90 backdrop-blur px-4 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">
                         <span id="fortschritt-text">1 / 10</span>
                     </div>
-                    
                     <div id="timer-display" class="text-blue-600 font-mono font-bold text-xl bg-white/90 backdrop-blur px-4 py-1 rounded-full shadow-sm border border-gray-100 flex items-center select-none whitespace-nowrap">00:00</div>
                 </div>
-
-                <!-- Rechte Gruppe: Einstellungen -->
                 <button id="einstellungen-button" class="touch-target text-gray-400 hover:text-blue-600 bg-white/90 backdrop-blur p-3 rounded-full shadow-sm border border-gray-100 pointer-events-auto active:scale-90 transition-transform ml-2">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
                 </button>
             </div>
             
-            <!-- Physics Canvas -->
             <div id="2d-canvas-container" class="absolute inset-0 z-0 w-full h-full"></div>
 
-            <!-- Card -->
             <div class="absolute inset-0 z-30 flex items-center justify-center pointer-events-none p-4 pb-20">
                 <div id="card-swipe-layer" class="w-full max-w-xs aspect-[3/2] pointer-events-auto cursor-grab active:cursor-grabbing touch-none select-none will-change-transform relative">
                     <div id="card-content-layer" class="w-full h-full bg-white rounded-3xl card-shadow border border-gray-200 flex items-center justify-center relative overflow-hidden bg-white select-none transition-colors duration-150">
-                        
-                        <!-- WORT ANZEIGE CONTAINER (wird skaliert) - PADDING ERHÖHT (px-8 bis px-12) -->
                         <div id="wort-anzeige-container" class="w-full h-full flex flex-row items-center justify-center px-8 sm:px-12 py-4 relative z-10 pointer-events-none gap-2 sm:gap-4">
-                            <!-- Artikel -->
                             <span id="artikel-anzeige" class="hidden font-bold leading-none font-learning text-gray-800"></span>
-                            <!-- Wort -->
                             <div id="wort-anzeige" class="font-bold whitespace-nowrap select-none text-gray-800 leading-none font-learning flex"></div>
                         </div>
-
                         <div id="card-overlay" class="absolute inset-0 z-20 flex items-center justify-center opacity-0 transition-opacity duration-150 bg-transparent pointer-events-none"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Los Button (nur im Count Modus am Ende) -->
             <div id="los-button-container" class="hidden absolute bottom-12 left-0 right-0 flex justify-center z-50 pointer-events-none">
                 <button id="los-button" class="touch-target pointer-events-auto bg-blue-600 hover:bg-blue-700 text-white font-bold text-3xl py-3 px-12 rounded-full shadow-xl transition-transform duration-150 hover:scale-105 active:scale-95 animate-bounce">Los!</button>
             </div>
         </div>
 
         <!-- 3. AUSWERTUNG -->
-        <div id="auswertung" class="hidden absolute inset-0 z-[60] bg-white flex flex-col justify-center items-center p-6 select-none">
-            <!-- TITEL: text-4xl -->
+        <div id="auswertung" class="hidden absolute inset-0 z-[60] bg-white flex flex-col justify-center items-center p-6 select-none opacity-0 transition-opacity duration-1000">
             <h2 id="auswertung-titel" class="text-4xl font-bold text-blue-600 mb-8 drop-shadow-sm font-learning text-center px-2">Super!</h2>
-            
             <div id="tier-leiter" class="flex flex-row items-end justify-center gap-4 mb-8 w-full max-w-sm h-24"></div>
-
-            <div id="result-box" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-8 w-full max-w-xs text-center shadow-sm">
-                <!-- Inhalt wird dynamisch gefüllt -->
-            </div>
-            
-            <!-- BUTTON: text-2xl -->
+            <div id="result-box" class="bg-gray-50 p-6 rounded-2xl border border-gray-100 mb-8 w-full max-w-xs text-center shadow-sm"></div>
             <button id="zurueck-button" class="touch-target w-full max-w-xs bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">Nochmal spielen</button>
         </div>
     </div>
@@ -256,50 +228,53 @@
         const DIPHTHONGE_LISTE = ['Ei', 'Ai', 'Eu', 'Au'];
         const RAINBOW_COLORS = ['#9C4F96', '#FF6355', '#FBA949', '#FAE442', '#8BD448', '#2AA8F2'];
         
-        // s: Silben, a: Artikel (optional)
+        // s: Silben, a: Artikel (optional), l: Level
         const WOERTERBUCH = [
             // STUFE 1
-            {s:['Ma','ma'], a:'die'}, {s:['Mi','mi'], a:'die'}, {s:['O','mi'], a:'die'}, {s:['O','ma'], a:'die'}, {s:['A','li'], a:'der'},
-            {s:['Li','lo'], a:'die'}, {s:['Lo','la'], a:'die'}, {s:['Li','sa'], a:'die'}, {s:['Sis','si'], a:'die'}, {s:['Mo','mo'], a:'der'},
-            {s:['La','ma'], a:'das'}, {s:['Li','la'], a:'das'}, {s:['Sa','la','mi'], a:'die'}, {s:['Li','mo'], a:'die'}, {s:['Si','lo'], a:'das'},
-            {s:['So','lo'], a:'das'}, {s:['Ma','l'], a:'das'}, {s:['Lo','s'], a:'das'}, {s:['Mi','mi','mi'], a:'das'},
-            {s:['li','la']}, {s:['lo','s']}, {s:['so','la','la']}, {s:['ma','l']}, {s:['soll']}, {s:['lass']}, {s:['So','ma','li','a']},
+            {l:1, s:['Ma','ma'], a:'die'}, {l:1, s:['Mi','mi'], a:'die'}, {l:1, s:['O','mi'], a:'die'}, {l:1, s:['O','ma'], a:'die'}, {l:1, s:['A','li'], a:'der'},
+            {l:1, s:['Li','lo'], a:'die'}, {l:1, s:['Lo','la'], a:'die'}, {l:1, s:['Li','sa'], a:'die'}, {l:1, s:['Sis','si'], a:'die'}, {l:1, s:['Mo','mo'], a:'der'},
+            {l:1, s:['La','ma'], a:'das'}, {l:1, s:['Li','la'], a:'das'}, {l:1, s:['Sa','la','mi'], a:'die'}, {l:1, s:['Li','mo'], a:'die'}, {l:1, s:['Si','lo'], a:'das'},
+            {l:1, s:['So','lo'], a:'das'}, {l:1, s:['Mal'], a:'das'}, {l:1, s:['Los'], a:'das'}, {l:1, s:['Mi','mi','mi'], a:'das'},
+            {l:1, s:['li','la']}, {l:1, s:['los']}, {l:1, s:['so','la','la']}, {l:1, s:['mal']}, {l:1, s:['soll']}, {l:1, s:['lass']}, {l:1, s:['So','ma','li','a']},
+            {l:1, s:['Im']}, {l:1, s:['Am']},
 
             // STUFE 2
-            {s:['Pan','da'], a:'der'}, {s:['En','te'], a:'die'}, {s:['Pu','del'], a:'der'}, {s:['Ka','mel'], a:'das'}, {s:['Pe','li','kan'], a:'der'},
-            {s:['Lamm'], a:'das'}, {s:['Pu','te'], a:'die'}, {s:['An','ti','lo','pe'], a:'die'}, {s:['Ka','ka','du'], a:'der'}, {s:['Sa','lat'], a:'der'},
-            {s:['To','ma','te'], a:'die'}, {s:['Me','lo','ne'], a:'die'}, {s:['Ka','ka','o'], a:'der'}, {s:['Nu','del'], a:'die'}, {s:['A','na','nas'], a:'die'},
-            {s:['Keks'], a:'der'}, {s:['Li','mo','na','de'], a:'die'}, {s:['Do','se'], a:'die'}, {s:['Mond'], a:'der'}, {s:['Son','ne'], a:'die'},
-            {s:['Tas','se'], a:'die'}, {s:['Lu','pe'], a:'die'}, {s:['Pin','sel'], a:'der'}, {s:['Kis','te'], a:'die'}, {s:['Lam','pe'], a:'die'},
-            {s:['Pa','ket'], a:'das'}, {s:['Post'], a:'die'}, {s:['Tan','ne'], a:'die'}, {s:['Sand'], a:'der'}, {s:['See'], a:'der'},
-            {s:['Do','mi','no'], a:'das'}, {s:['Mi','ka','do'], a:'das'}, {s:['Pa','pa'], a:'der'}, {s:['Tan','te'], a:'die'}, {s:['On','kel'], a:'der'},
-            {s:['Pi','lot'], a:'der'}, {s:['Kun','de'], a:'der'}, {s:['Pa','te'], a:'der'}, {s:['Mi','nu','ten'], a:'die'},
-            {s:['nett']}, {s:['dumm']}, {s:['kalt']}, {s:['nass']}, {s:['laut']}, {s:['mun','ter']}, {s:['dan','kend']}, {s:['rund']}, {s:['e','del']}, {s:['toll']}, {s:['satt']},
-            {s:['tun']}, {s:['tunkt']}, {s:['putzt']}, {s:['isst']}, {s:['sen','det']}, {s:['dehnt']}, {s:['en','det']}, {s:['kannst']}, {s:['ma','len']}, {s:['le','sen']}, {s:['tur','nen']}, {s:['sein']},
+            {l:2, s:['Pan','da'], a:'der'}, {l:2, s:['En','te'], a:'die'}, {l:2, s:['Pu','del'], a:'der'}, {l:2, s:['Ka','mel'], a:'das'}, {l:2, s:['Pe','li','kan'], a:'der'},
+            {l:2, s:['Lamm'], a:'das'}, {l:2, s:['Pu','te'], a:'die'}, {l:2, s:['An','ti','lo','pe'], a:'die'}, {l:2, s:['Ka','ka','du'], a:'der'}, {l:2, s:['Sa','lat'], a:'der'},
+            {l:2, s:['To','ma','te'], a:'die'}, {l:2, s:['Me','lo','ne'], a:'die'}, {l:2, s:['Ka','ka','o'], a:'der'}, {l:2, s:['Nu','del'], a:'die'}, {l:2, s:['A','na','nas'], a:'die'},
+            {l:2, s:['Keks'], a:'der'}, {l:2, s:['Li','mo','na','de'], a:'die'}, {l:2, s:['Do','se'], a:'die'}, {l:2, s:['Mond'], a:'der'}, {l:2, s:['Son','ne'], a:'die'},
+            {l:2, s:['Tas','se'], a:'die'}, {l:2, s:['Lu','pe'], a:'die'}, {l:2, s:['Pin','sel'], a:'der'}, {l:2, s:['Kis','te'], a:'die'}, {l:2, s:['Lam','pe'], a:'die'},
+            {l:2, s:['Pa','ket'], a:'das'}, {l:2, s:['Post'], a:'die'}, {l:2, s:['Tan','ne'], a:'die'}, {l:2, s:['Sand'], a:'der'}, {l:2, s:['See'], a:'der'},
+            {l:2, s:['Do','mi','no'], a:'das'}, {l:2, s:['Mi','ka','do'], a:'das'}, {l:2, s:['Pa','pa'], a:'der'}, {l:2, s:['Tan','te'], a:'die'}, {l:2, s:['On','kel'], a:'der'},
+            {l:2, s:['Pi','lot'], a:'der'}, {l:2, s:['Kun','de'], a:'der'}, {l:2, s:['Pa','te'], a:'der'}, {l:2, s:['Mi','nu','ten'], a:'die'}, {l:2, s:['E','le','na'], a:'die'},
+            {l:2, s:['nett']}, {l:2, s:['dumm']}, {l:2, s:['kalt']}, {l:2, s:['nass']}, {l:2, s:['laut']}, {l:2, s:['mun','ter']}, {l:2, s:['dan','kend']}, {l:2, s:['rund']}, {l:2, s:['e','del']}, {l:2, s:['toll']}, {l:2, s:['satt']},
+            {l:2, s:['tun']}, {l:2, s:['tunkt']}, {l:2, s:['putzt']}, {l:2, s:['isst']}, {l:2, s:['sen','det']}, {l:2, s:['dehnt']}, {l:2, s:['en','det']}, {l:2, s:['kannst']}, {l:2, s:['ma','len']}, {l:2, s:['le','sen']}, {l:2, s:['tur','nen']}, {l:2, s:['sein']},
+            {l:2, s:['tas','ten']}, {l:2, s:['tes','ten']}, {l:2, s:['kos','ten']}, {l:2, s:['pus','ten']}, {l:2, s:['kne','ten']},
 
             // STUFE 3
-            {s:['Eis'], a:'das'}, {s:['Maus'], a:'die'}, {s:['Haus'], a:'das'}, {s:['Au','to'], a:'das'}, {s:['Eu','le'], a:'die'}, {s:['Sei','fe'], a:'die'},
-            {s:['Lei','ter'], a:'die'}, {s:['Mau','er'], a:'die'}, {s:['Feu','er'], a:'das'}, {s:['Eu','ro'], a:'der'}, {s:['Rei','se'], a:'die'}, {s:['A','mei','se'], a:'die'},
-            {s:['Haus','tier'], a:'das'}, {s:['Ho','se'], a:'die'}, {s:['Hut'], a:'der'}, {s:['Hof'], a:'der'}, {s:['Fo','to'], a:'das'}, {s:['So','fa'], a:'das'},
-            {s:['E','le','fant'], a:'der'}, {s:['Fahr','rad'], a:'das'}, {s:['Win','ter'], a:'der'}, {s:['Was','ser'], a:'das'}, {s:['Wurm'], a:'der'}, {s:['Tor'], a:'das'},
-            {s:['Ra','dio'], a:'das'}, {s:['Te','le','fon'], a:'das'}, {s:['Ta','fel'], a:'die'}, {s:['Fens','ter'], a:'das'}, {s:['Leh','rer'], a:'der'}, {s:['Fah','rer'], a:'der'},
-            {s:['Far','be'], a:'die'}, {s:['Fle','der','maus'], a:'die'}, {s:['Mar','me','la','de'], a:'die'}, {s:['Feu','er','wehr'], a:'die'}, {s:['In','di','a','ner'], a:'der'}, {s:['Trom','pe','te'], a:'die'}, {s:['Pra','li','ne'], a:'die'},
-            {s:['lei','se']}, {s:['teu','er']}, {s:['neu']}, {s:['froh']}, {s:['hart']}, {s:['wahr']}, {s:['hell']}, {s:['warm']}, {s:['rot']}, {s:['weit']}, {s:['frei']}, {s:['flau']}, {s:['treu']},
-            {s:['reist']}, {s:['läuft']}, {s:['weint']}, {s:['ruft']}, {s:['hört']}, {s:['haut']}, {s:['kauft']}, {s:['freut']}, {s:['hofft']}, {s:['wärmt']}, {s:['wart']}, {s:['fah','re']}, {s:['ru','fen']}, {s:['ho','len']},
+            {l:3, s:['Eis'], a:'das'}, {l:3, s:['Maus'], a:'die'}, {l:3, s:['Haus'], a:'das'}, {l:3, s:['Au','to'], a:'das'}, {l:3, s:['Eu','le'], a:'die'}, {l:3, s:['Sei','fe'], a:'die'},
+            {l:3, s:['Lei','ter'], a:'die'}, {l:3, s:['Mau','er'], a:'die'}, {l:3, s:['Feu','er'], a:'das'}, {l:3, s:['Eu','ro'], a:'der'}, {l:3, s:['Rei','se'], a:'die'}, {l:3, s:['A','mei','se'], a:'die'},
+            {l:3, s:['Haus','tier'], a:'das'}, {l:3, s:['Ho','se'], a:'die'}, {l:3, s:['Hut'], a:'der'}, {l:3, s:['Hof'], a:'der'}, {l:3, s:['Fo','to'], a:'das'}, {l:3, s:['So','fa'], a:'das'},
+            {l:3, s:['E','le','fant'], a:'der'}, {l:3, s:['Fahr','rad'], a:'das'}, {l:3, s:['Win','ter'], a:'der'}, {l:3, s:['Was','ser'], a:'das'}, {l:3, s:['Wurm'], a:'der'}, {l:3, s:['Tor'], a:'das'},
+            {l:3, s:['Ra','dio'], a:'das'}, {l:3, s:['Te','le','fon'], a:'das'}, {l:3, s:['Ta','fel'], a:'die'}, {l:3, s:['Fens','ter'], a:'das'}, {l:3, s:['Leh','rer'], a:'der'}, {l:3, s:['Fah','rer'], a:'der'},
+            {l:3, s:['Far','be'], a:'die'}, {l:3, s:['Fle','der','maus'], a:'die'}, {l:3, s:['Mar','me','la','de'], a:'die'}, {l:3, s:['Feu','er','wehr'], a:'die'}, {l:3, s:['In','di','a','ner'], a:'der'}, {l:3, s:['Trom','pe','te'], a:'die'}, {l:3, s:['Pra','li','ne'], a:'die'},
+            {l:3, s:['lei','se']}, {l:3, s:['teu','er']}, {l:3, s:['neu']}, {l:3, s:['froh']}, {l:3, s:['hart']}, {l:3, s:['wahr']}, {l:3, s:['hell']}, {l:3, s:['warm']}, {l:3, s:['rot']}, {l:3, s:['weit']}, {l:3, s:['frei']}, {l:3, s:['flau']}, {l:3, s:['treu']},
+            {l:3, s:['reist']}, {l:3, s:['läuft']}, {l:3, s:['weint']}, {l:3, s:['ruft']}, {l:3, s:['hört']}, {l:3, s:['haut']}, {l:3, s:['kauft']}, {l:3, s:['freut']}, {l:3, s:['hofft']}, {l:3, s:['wärmt']}, {l:3, s:['wart']}, {l:3, s:['fah','re']}, {l:3, s:['ru','fen']}, {l:3, s:['ho','len']},
+            {l:3, s:['ren','nen']}, {l:3, s:['ru','hen']}, {l:3, s:['ru','fen']}, {l:3, s:['rei','ten']}, {l:3, s:['lau','fen']}, {l:3, s:['kau','fen']}, {l:3, s:['tei','len']}, {l:3, s:['fei','ern']}, {l:3, s:['heu','len']}, {l:3, s:['woh','nen']}, {l:3, s:['fah','ren']}, {l:3, s:['wer','fen']}, {l:3, s:['war','ten']}, {l:3, s:['hus','ten']},
 
             // STUFE 4
-            {s:['Bär'], a:'der'}, {s:['Kä','se'], a:'der'}, {s:['Öl'], a:'das'}, {s:['Tür'], a:'die'}, {s:['Müll'], a:'der'}, {s:['Lö','we'], a:'der'}, {s:['Schü','ler'], a:'der'}, {s:['Schu','le'], a:'die'},
-            {s:['Tisch'], a:'der'}, {s:['Fisch'], a:'der'}, {s:['Schiff'], a:'das'}, {s:['Schaf'], a:'das'}, {s:['Ta','sche'], a:'die'}, {s:['Wä','sche'], a:'die'}, {s:['Mäd','chen'], a:'das'}, {s:['Kö','nig'], a:'der'},
-            {s:['Ü','bung'], a:'die'}, {s:['Scho','ko','la','de'], a:'die'}, {s:['Schmet','ter','ling'], a:'der'}, {s:['Re','gen','schirm'], a:'der'},
-            {s:['Buch'], a:'das'}, {s:['Baum'], a:'der'}, {s:['Blu','me'], a:'die'}, {s:['Brot'], a:'das'}, {s:['Ball'], a:'der'}, {s:['Bein'], a:'das'}, {s:['Bauch'], a:'der'}, {s:['Ba','cken'], a:'das'},
-            {s:['We','cker'], a:'der'}, {s:['Da','ckel'], a:'der'}, {s:['Sack'], a:'der'}, {s:['Ja','cke'], a:'die'}, {s:['Geld'], a:'das'}, {s:['Gold'], a:'das'}, {s:['Gras'], a:'das'}, {s:['Glas'], a:'das'},
-            {s:['Glück'], a:'das'}, {s:['Milch'], a:'die'}, {s:['Dach'], a:'das'}, {s:['Licht'], a:'das'}, {s:['Nacht'], a:'die'}, {s:['Re','gen','bo','gen'], a:'der'}, {s:['Bä','cke','rei'], a:'die'},
-            {s:['Ge','mü','se'], a:'das'}, {s:['Ho','nig','bie','ne'], a:'die'}, {s:['Vo','gel'], a:'der'}, {s:['Va','se'], a:'die'}, {s:['Va','ter'], a:'der'}, {s:['Vul','kan'], a:'der'},
-            {s:['Jä','ger'], a:'der'}, {s:['Jun','ge'], a:'der'}, {s:['Ja','gu','ar'], a:'der'}, {s:['Jog','hurt'], a:'der'}, {s:['Ta','xi'], a:'das'}, {s:['Text'], a:'der'}, {s:['Xy','lo','phon'], a:'das'},
-            {s:['Po','ny'], a:'das'}, {s:['Han','dy'], a:'das'}, {s:['Qual','le'], a:'die'}, {s:['A','qua','ri','um'], a:'das'}, {s:['Quel','le'], a:'die'}, {s:['Last','wa','gen'], a:'der'},
-            {s:['Lo','ko','mo','ti','ve'], a:'die'}, {s:['A','ben','teu','er'], a:'das'},
-            {s:['schön']}, {s:['süß']}, {s:['grün']}, {s:['gelb']}, {s:['glück','lich']}, {s:['weich']}, {s:['groß']}, {s:['klein']}, {s:['jung']}, {s:['bö','se']}, {s:['schwer']}, {s:['e','ckig']}, {s:['mu','tig']},
-            {s:['magst']}, {s:['gibst']}, {s:['fängt']}, {s:['schlägt']}, {s:['bricht']}, {s:['wächst']}, {s:['jagt']}, {s:['quakt']}, {s:['übt']}, {s:['ge','hen']}, {s:['la','chen']}, {s:['ko','chen']}
+            {l:4, s:['Bär'], a:'der'}, {l:4, s:['Kä','se'], a:'der'}, {l:4, s:['Öl'], a:'das'}, {l:4, s:['Tür'], a:'die'}, {l:4, s:['Müll'], a:'der'}, {l:4, s:['Lö','we'], a:'der'}, {l:4, s:['Schü','ler'], a:'der'}, {l:4, s:['Schu','le'], a:'die'},
+            {l:4, s:['Tisch'], a:'der'}, {l:4, s:['Fisch'], a:'der'}, {l:4, s:['Schiff'], a:'das'}, {l:4, s:['Schaf'], a:'das'}, {l:4, s:['Ta','sche'], a:'die'}, {l:4, s:['Wä','sche'], a:'die'}, {l:4, s:['Mäd','chen'], a:'das'}, {l:4, s:['Kö','nig'], a:'der'},
+            {l:4, s:['Ü','bung'], a:'die'}, {l:4, s:['Scho','ko','la','de'], a:'die'}, {l:4, s:['Schmet','ter','ling'], a:'der'}, {l:4, s:['Re','gen','schirm'], a:'der'},
+            {l:4, s:['Buch'], a:'das'}, {l:4, s:['Baum'], a:'der'}, {l:4, s:['Blu','me'], a:'die'}, {l:4, s:['Brot'], a:'das'}, {l:4, s:['Ball'], a:'der'}, {l:4, s:['Bein'], a:'das'}, {l:4, s:['Bauch'], a:'der'}, {l:4, s:['Ba','cken'], a:'das'},
+            {l:4, s:['We','cker'], a:'der'}, {l:4, s:['Da','ckel'], a:'der'}, {l:4, s:['Sack'], a:'der'}, {l:4, s:['Ja','cke'], a:'die'}, {l:4, s:['Geld'], a:'das'}, {l:4, s:['Gold'], a:'das'}, {l:4, s:['Gras'], a:'das'}, {l:4, s:['Glas'], a:'das'},
+            {l:4, s:['Glück'], a:'das'}, {l:4, s:['Milch'], a:'die'}, {l:4, s:['Dach'], a:'das'}, {l:4, s:['Licht'], a:'das'}, {l:4, s:['Nacht'], a:'die'}, {l:4, s:['Re','gen','bo','gen'], a:'der'}, {l:4, s:['Bä','cke','rei'], a:'die'},
+            {l:4, s:['Ge','mü','se'], a:'das'}, {l:4, s:['Ho','nig','bie','ne'], a:'die'}, {l:4, s:['Vo','gel'], a:'der'}, {l:4, s:['Va','se'], a:'die'}, {l:4, s:['Va','ter'], a:'der'}, {l:4, s:['Vul','kan'], a:'der'},
+            {l:4, s:['Jä','ger'], a:'der'}, {l:4, s:['Jun','ge'], a:'der'}, {l:4, s:['Ja','gu','ar'], a:'der'}, {l:4, s:['Jog','hurt'], a:'der'}, {l:4, s:['Ta','xi'], a:'das'}, {l:4, s:['Text'], a:'der'}, {l:4, s:['Xy','lo','phon'], a:'das'},
+            {l:4, s:['Po','ny'], a:'das'}, {l:4, s:['Han','dy'], a:'das'}, {l:4, s:['Qual','le'], a:'die'}, {l:4, s:['A','qua','ri','um'], a:'das'}, {l:4, s:['Quel','le'], a:'die'}, {l:4, s:['Last','wa','gen'], a:'der'},
+            {l:4, s:['Lo','ko','mo','ti','ve'], a:'die'}, {l:4, s:['A','ben','teu','er'], a:'das'},
+            {l:4, s:['schön']}, {l:4, s:['süß']}, {l:4, s:['grün']}, {l:4, s:['gelb']}, {l:4, s:['glück','lich']}, {l:4, s:['weich']}, {l:4, s:['groß']}, {l:4, s:['klein']}, {l:4, s:['jung']}, {l:4, s:['bö','se']}, {l:4, s:['schwer']}, {l:4, s:['e','ckig']}, {l:4, s:['mu','tig']},
+            {l:4, s:['magst']}, {l:4, s:['gibst']}, {l:4, s:['fängt']}, {l:4, s:['schlägt']}, {l:4, s:['bricht']}, {l:4, s:['wächst']}, {l:4, s:['jagt']}, {l:4, s:['quakt']}, {l:4, s:['übt']}, {l:4, s:['ge','hen']}, {l:4, s:['la','chen']}, {l:4, s:['ko','chen']}
         ];
 
         // --- STATE ---
@@ -341,7 +316,8 @@
             card: { swipe: document.getElementById('card-swipe-layer'), content: document.getElementById('card-content-layer'), textContainer: document.getElementById('wort-anzeige-container'), text: document.getElementById('wort-anzeige'), artikel: document.getElementById('artikel-anzeige'), overlay: document.getElementById('card-overlay'), bg: document.getElementById('swipe-feedback-bg') },
             stats: { progressText: document.getElementById('fortschritt-text'), timer: document.getElementById('timer-display'), animals: document.getElementById('tier-leiter'), resultBox: document.getElementById('result-box') },
             misc: { losContainer: document.getElementById('los-button-container') },
-            toast: { el: document.getElementById('game-toast'), text: document.getElementById('game-toast-text') }
+            toast: { el: document.getElementById('game-toast'), text: document.getElementById('game-toast-text') },
+            dictionary: { overlay: document.getElementById('dictionary-overlay'), content: document.getElementById('dictionary-content') }
         };
 
         let engine, render, runner, stirrer, mouseConstraint, physicsActive = false;
@@ -365,10 +341,13 @@
                 
                 dom.btns.stop.onclick = handleStopButton;
                 window.addEventListener('resize', () => { if(physicsActive) resizePhysics(); adjustFontSize(); });
+                // --- GEÄNDERT: Touch events für Stirrer hinzugefügt ---
                 document.addEventListener('mousemove', moveStirrer);
                 document.addEventListener('touchmove', moveStirrer, {passive: false});
                 document.addEventListener('touchstart', handleInteractionStart, {passive: false});
                 document.addEventListener('mousedown', handleInteractionStart);
+                document.addEventListener('touchend', endStirrer);
+                document.addEventListener('mouseup', endStirrer);
                 
                 initSwipeLogic();
                 ladeEinstellungen();
@@ -379,6 +358,61 @@
                 dom.intro.style.display = 'none'; dom.app.classList.remove('hidden'); dom.app.style.opacity = '1'; dom.views.start.classList.remove('hidden'); dom.views.start.classList.add('flex');
             }
         });
+
+        // --- DICTIONARY FEATURE ---
+        function toggleDictionary(show) {
+            if(show) {
+                dom.dictionary.content.innerHTML = '';
+                // Render Dictionary
+                HEFTE.forEach((heft, i) => {
+                    const levelWords = WOERTERBUCH.filter(w => w.l === (i + 1));
+                    if(levelWords.length === 0) return;
+
+                    const section = document.createElement('div');
+                    section.innerHTML = `<h3 class="text-xl font-bold text-blue-600 mb-2 mt-4 font-learning border-b border-blue-100">Stufe ${heft.name}</h3>`;
+                    
+                    const grid = document.createElement('div');
+                    grid.className = 'grid grid-cols-2 gap-2 sm:grid-cols-3';
+                    
+                    levelWords.forEach(w => {
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center gap-1 p-2 bg-white rounded shadow-sm border border-gray-100 text-sm';
+                        
+                        if(w.a) {
+                            const art = document.createElement('span');
+                            art.textContent = w.a.toLowerCase();
+                            art.className = 'text-gray-400 font-learning text-xs';
+                            div.appendChild(art);
+                        }
+                        
+                        const wordSpan = document.createElement('span');
+                        wordSpan.className = 'font-bold text-gray-800 font-learning';
+                        
+                        // Silben färben im Wörterbuch
+                        w.s.forEach((silbe, idx) => {
+                            const sSpan = document.createElement('span');
+                            let txt = silbe.toLowerCase();
+                            if(idx === 0) txt = txt.charAt(0).toUpperCase() + txt.slice(1);
+                            sSpan.textContent = txt;
+                            sSpan.className = idx % 2 === 0 ? 'text-blue-600' : 'text-red-600';
+                            wordSpan.appendChild(sSpan);
+                        });
+                        
+                        div.appendChild(wordSpan);
+                        grid.appendChild(div);
+                    });
+                    
+                    section.appendChild(grid);
+                    dom.dictionary.content.appendChild(section);
+                });
+                
+                dom.dictionary.overlay.classList.remove('hidden');
+                dom.dictionary.overlay.classList.add('flex');
+            } else {
+                dom.dictionary.overlay.classList.add('hidden');
+                dom.dictionary.overlay.classList.remove('flex');
+            }
+        }
 
         // --- HINWEIS (TOAST) ---
         function showOverlayMessage(msg) {
@@ -393,7 +427,20 @@
         // DEFINIERE DIESE FUNKTIONEN ZUERST
         function showEnd() {
             state.game.active = false; stopPhysics();
-            dom.views.spiel.classList.add('hidden'); dom.views.ende.classList.remove('hidden'); dom.views.ende.classList.add('flex');
+            dom.views.spiel.classList.add('hidden'); 
+            // Weicher Übergang
+            dom.views.spiel.style.opacity = '0';
+            
+            setTimeout(() => {
+                 dom.views.spiel.classList.add('hidden');
+                 dom.views.ende.classList.remove('hidden'); 
+                 dom.views.ende.classList.add('flex');
+                 
+                 // Fade In End Screen
+                 requestAnimationFrame(() => {
+                     dom.views.ende.classList.remove('opacity-0');
+                 });
+            }, 1000);
             
             const dur = state.game.finalDuration || (Date.now() - state.game.startTimeGlobal);
             const secs = Math.floor(dur/1000);
@@ -459,9 +506,9 @@
                         const dx = cx - b.position.x;
                         const dy = cy - b.position.y;
                         
-                        // Startet NOCH langsamer
-                        const pullStrength = 0.000005 * (1 + elapsed/3000); 
-                        const turnStrength = 0.0001 * (1 + elapsed/4000);
+                        // Startet NOCH langsamer (0.0000002)
+                        const pullStrength = 0.0000002 * (1 + elapsed/3000); 
+                        const turnStrength = 0.00001 * (1 + elapsed/4000);
                         
                         // Dämpfung
                         Matter.Body.setVelocity(b, {
@@ -519,7 +566,7 @@
             updateBuchstabenUI(index);
         }
 
-        // GEÄNDERT: Zeigt ALLE Buchstaben aus ALLEN Heften, Checkboxen entsprechend markiert
+        // GEÄNDERT: Button wählt nur Buchstaben der gewählten Stufe (+ darunter)
         function updateBuchstabenUI(idx, savedSelection = null) {
             // Sammle alle Buchstaben aus allen Heften (eindeutig)
             let allLetters = [];
@@ -553,8 +600,21 @@
         function selectAllChars() {
              const listInner = dom.inputs.buchstabenList;
              if(listInner) {
-                 // Einfach alle verfügbaren Inputs anhaken
-                 listInner.querySelectorAll('input').forEach(cb => cb.checked = true);
+                 // GEÄNDERT: Wählt nur Buchstaben aus, die zur aktuellen Stufe (und darunter) gehören.
+                 // Wir müssen wissen, welche das sind.
+                 let activeLettersInStufe = [];
+                 for (let i = 0; i <= state.settings.heftIndex; i++) {
+                     activeLettersInStufe = activeLettersInStufe.concat(HEFTE[i].buchstaben);
+                 }
+                 
+                 const inputs = listInner.querySelectorAll('input');
+                 inputs.forEach(cb => {
+                     if (activeLettersInStufe.includes(cb.value)) {
+                         cb.checked = true;
+                     } else {
+                         cb.checked = false; // ABWÄHLEN wenn nicht in Stufe
+                     }
+                 });
                  saveSettings();
              }
         }
@@ -626,6 +686,11 @@
             state.settings.currentLetters.forEach(b => state.game.letterStats[b] = 0);
             state.view = { zoom: 1, targetZoom: 1 };
             calcPossibleRealWords();
+            
+            // RESET Opacity
+            dom.views.spiel.style.opacity = '1';
+            dom.views.ende.classList.add('opacity-0');
+            dom.views.ende.classList.add('hidden');
 
             dom.views.start.classList.add('hidden'); dom.views.start.classList.remove('flex');
             dom.views.ende.classList.add('hidden'); dom.views.ende.classList.remove('flex');
@@ -661,12 +726,56 @@
             showOverlayMessage("Richtig gelesene Wörter nach rechts wischen.");
         }
 
+        // GEÄNDERT: Level Filter & Manual Selection Logic
         function calcPossibleRealWords() {
              const allowedCharsFlat = new Set();
              state.settings.currentLetters.forEach(token => token.toUpperCase().split('').forEach(char => allowedCharsFlat.add(char)));
+             
+             // Check: Was ist das höchste Level, das wir "aktiviert" haben?
+             // Wir gehen davon aus, dass wir maximal Wörter des aktuellen Heftes nutzen wollen,
+             // PLUS Wörter, die theoretisch möglich sind durch manuelle Auswahl.
+             // Aber User-Request: "EI Wörter erst ab Stufe 3".
+             // Also filtern wir Wörter, deren Level > höchstes 'Heft' eines gewählten Buchstabens ist?
+             // Nein, besser: Wir erlauben Wörter, wenn ihr Level <= dem Level des schwierigsten Buchstaben ist, der im Wort vorkommt?
+             // Simplest approach per request: Check word level property.
+             
              state.game.realWordsPossible = WOERTERBUCH.filter(silben => {
+                // 1. Check Chars
+                if (!silben.s.join('').toUpperCase().split('').every(c => allowedCharsFlat.has(c))) return false;
+
+                // 2. Check Level (Hard constraint from DB)
+                // Aber: Wenn ich in Stufe 2 bin und 'Ei' aus Stufe 3 manuell anwähle, darf ich dann 'Eis' (Level 3) sehen?
+                // Ja, wahrscheinlich.
+                // Also: Wir müssen wissen, ob wir Buchstaben haben, die dieses Level rechtfertigen.
+                // Wir erlauben das Wort, wenn ALLE seine Buchstaben in 'allowedCharsFlat' sind. (Das ist oben schon passiert).
+                // UND: Das Wort-Level darf nicht höher sein als das höchste Level eines ausgewählten Buchstabens?
+                // Nein, 'Eis' hat E, i, s. E=2, i=1, s=1. Aber 'Eis' ist Level 3 wegen Diphthong.
+                // D.h. wir brauchen 'Ei' als Token.
+                // Unsere `currentLetters` enthält Tokens wie 'Ei'.
+                // Wenn 'Ei' in `currentLetters` ist, dann ist das Wort erlaubt.
+                // ABER: 'Ameise' enthält 'Ei'. Wenn wir 'Ei' nicht als Token gewählt haben, sondern nur 'E' und 'i' einzeln,
+                // dann würde 'Ameise' technisch durch den Char-Check kommen (weil A,m,e,i,s,e gewählt sind).
+                // DESHALB brauchten wir das Level-Attribut.
+                // Wir filtern Wörter raus, deren Level > ist als das höchste Level, das wir "freigeschaltet" haben?
+                // Was ist "freigeschaltet"?
+                // Wir nehmen einfach das Maximum der Level aller ausgewählten Buchstaben-Gruppen (Heft-Zugehörigkeit).
+                
+                let maxAllowedLevel = 1;
+                state.settings.currentLetters.forEach(tok => {
+                    // Finde Level des Tokens
+                    HEFTE.forEach((h, idx) => {
+                        if (h.buchstaben.includes(tok)) {
+                            if (idx + 1 > maxAllowedLevel) maxAllowedLevel = idx + 1;
+                        }
+                    });
+                });
+                
+                if (silben.l > maxAllowedLevel) return false;
+
+                // 3. Length check
                 if(silben.s.length < state.settings.minSilben || silben.s.length > state.settings.maxSilben) return false;
-                return silben.s.join('').toUpperCase().split('').every(c => allowedCharsFlat.has(c));
+                
+                return true;
              });
         }
 
@@ -725,7 +834,7 @@
             });
 
             // TOAST MESSAGE TIME MODE
-            showOverlayMessage("Tippe die Kugeln an!");
+            showOverlayMessage("Tippe die Kugeln an! 👍");
         }
 
         // --- Endphase vorbereiten (Wörter Modus) ---
@@ -748,7 +857,7 @@
             });
 
             // TOAST MESSAGE COUNT MODE
-            showOverlayMessage("Unordnung machen!");
+            showOverlayMessage(`Alle ${state.settings.targetCount} Wörter gelesen! 👍`);
         }
 
         function nextCard() {
@@ -852,11 +961,19 @@
             const availableRealWords = state.game.realWordsPossible.length;
             const playedCount = state.game.runde + 1;
             
-            // Mix fantasy and real words if few words available
-            if (availableRealWords < 20 && playedCount % 3 === 0) return { s: generateFantasyWord(determineTargetLength()), a: null };
+            // GEÄNDERT: Mehr Fantasiewörter in Stufe 2 (30%)
+            const fantasyChance = (state.settings.heftIndex === 1) ? 0.3 : 0.05; // Stufe 2 = Index 1
+            if (Math.random() < fantasyChance || (availableRealWords < 20 && playedCount % 3 === 0)) {
+                 return { s: generateFantasyWord(determineTargetLength()), a: null };
+            }
             
             const unusedReal = state.game.realWordsPossible.filter(item => !state.game.history.has(item.s.join('')));
             if (unusedReal.length > 0) return unusedReal[Math.floor(Math.random() * unusedReal.length)];
+            
+            // Fallback real word if no unused left
+            if (state.game.realWordsPossible.length > 0) {
+                 return state.game.realWordsPossible[Math.floor(Math.random() * state.game.realWordsPossible.length)];
+            }
             
             return { s: generateFantasyWord(determineTargetLength()), a: null };
         }
@@ -1039,13 +1156,13 @@
             const targetVal = state.settings.mode === 'count' ? state.settings.targetCount : state.settings.targetTime;
             
             if(state.settings.mode === 'time') {
-                const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -50, 45, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] } });
+                const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -50, 45, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] }, label: 'ball' });
                 Matter.Composite.add(world, body);
             } else {
                 let count = Math.floor(((w*h*0.85)/(Math.PI*15*15*3)/targetVal)*1.5 * factor);
                 if(count<10) count=10; if(count>150) count=150;
                 for(let i=0; i<count; i++) {
-                    const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -Math.random()*300-50, 15, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] } });
+                    const body = Matter.Bodies.circle(Math.random()*w*0.8+w*0.1, -Math.random()*300-50, 15, { restitution: 0.1, friction: 0.5, render: { fillStyle: RAINBOW_COLORS[state.game.colorIndex] }, label: 'ball' });
                     Matter.Composite.add(world, body);
                 }
             }
@@ -1075,6 +1192,14 @@
             }
         }
         
+        // --- GEÄNDERT: STIRRER REMOVAL ON END ---
+        function endStirrer(e) {
+            if(stirrer && engine) {
+                Matter.Composite.remove(engine.world, stirrer);
+                stirrer = null;
+            }
+        }
+
         function moveStirrer(e) {
             // Nur erlauben, wenn fertig UND im Count Mode
             if (!state.game.finished || state.settings.mode !== 'count') return;
@@ -1085,22 +1210,39 @@
             let x = e.touches ? e.touches[0].clientX : e.clientX; 
             let y = e.touches ? e.touches[0].clientY : e.clientY;
             
+            // GEÄNDERT: Radius 100, Waking Up nearby bodies
             if (!stirrer && engine) { 
-                // GEÄNDERT: Radius 80 für mehr Power, Invisible
-                stirrer = Matter.Bodies.circle(x, y, 80, { 
+                stirrer = Matter.Bodies.circle(x, y, 100, { 
                     isStatic: true, 
                     label: 'stirrer',
                     render: { visible: false } 
                 }); 
                 Matter.Composite.add(engine.world, stirrer); 
             } else if (stirrer) {
+                // Update position more aggressively
                 Matter.Body.setPosition(stirrer, {x, y});
+                // Ensure velocity is reset so it doesn't drift
+                Matter.Body.setVelocity(stirrer, { x: 0, y: 0 });
+
+                // Wake up nearby bodies for better responsiveness
+                const nearby = Matter.Query.region(Matter.Composite.allBodies(engine.world), {
+                    min: { x: x - 120, y: y - 120 },
+                    max: { x: x + 120, y: y + 120 }
+                });
+                nearby.forEach(b => {
+                    if (!b.isStatic) Matter.Sleeping.set(b, false);
+                });
             }
         }
         
         function handleInteractionStart(e) {
-            // Nur im Time Mode erlaubt ODER wenn fertig
-            // Aber "poppen" wollen wir eigentlich nur im Time Mode
+            // Stirrer logic on touch start (count mode)
+            if(state.game.finished && state.settings.mode === 'count') {
+                moveStirrer(e);
+                return;
+            }
+
+            // Pop logic (time mode only)
             if(!state.game.finished || state.settings.mode !== 'time') return;
             
             const x = e.touches ? e.touches[0].clientX : e.clientX; const y = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1117,8 +1259,6 @@
             if (removed && navigator.vibrate) {
                  navigator.vibrate(40); // HAPTIC FEEDBACK POP
             }
-            
-            // Check happens in loop now
         }
         function createConfetti(x, y, c) {
             for(let i=0; i<30; i++) { 
