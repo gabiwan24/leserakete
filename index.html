@@ -51,6 +51,15 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 0.5rem;
         }
+
+        /* Custom Scrollbar hide for letter area */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
 <body class="w-screen h-[100dvh] overflow-hidden flex flex-col select-none">
@@ -71,82 +80,86 @@
     <div id="app" class="relative w-full h-full z-10 flex flex-col hidden opacity-0 transition-opacity duration-500">
 
         <!-- 1. SETUP (Menü) -->
-        <div id="startbildschirm" class="flex flex-col h-full p-4 bg-white z-50 relative overflow-y-auto">
-            <!-- TITEL: text-3xl -->
-            <h1 class="text-3xl font-bold text-center text-blue-600 mb-4 mt-2 shrink-0 font-learning">LeseRakete 🚀</h1>
+        <!-- Flex Container für Sticky Footer Layout -->
+        <div id="startbildschirm" class="flex flex-col h-full bg-white z-50">
+            
+            <!-- SCROLLABLE CONTENT (Oben) -->
+            <div class="flex-grow overflow-y-auto p-4 pb-2">
+                <h1 class="text-3xl font-bold text-center text-blue-600 mb-4 shrink-0 font-learning">LeseRakete 🚀</h1>
 
-            <div class="flex-grow flex flex-col gap-3 pb-20 px-1">
-                
-                <!-- Optionen -->
-                <div class="bg-gray-50 rounded-xl p-3 border border-gray-200 shrink-0 flex flex-col gap-4">
+                <div class="flex flex-col gap-3">
                     
-                    <!-- Silben Range -->
-                    <!-- TEXT: text-base, INPUTS: text-xl -->
-                    <div class="flex items-center justify-center gap-2 text-base font-bold text-blue-600 whitespace-nowrap">
-                        <span>Mit Wörtern mit</span>
-                        <input type="number" id="min-silben" value="1" min="1" max="5" class="w-10 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-xl focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
-                        <span>bis</span>
-                        <input type="number" id="max-silben" value="2" min="1" max="5" class="w-10 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-xl focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
-                        <span>Silben</span>
-                    </div>
+                    <!-- Optionen & Modus KOMPAKT -->
+                    <div class="bg-gray-50 rounded-xl p-2 border border-gray-200 shrink-0 flex flex-col gap-2">
+                        
+                        <!-- Zeile 1: Silben & Modus nebeneinander -->
+                        <div class="flex gap-2">
+                            <!-- Silben -->
+                            <div class="flex-1 flex flex-col justify-center items-center bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
+                                <span class="text-[10px] font-bold text-gray-400 uppercase mb-1">Silben</span>
+                                <div class="flex items-center justify-center gap-1 text-base font-bold text-blue-600">
+                                    <input type="number" id="min-silben" value="1" min="1" max="5" class="w-6 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                                    <span>-</span>
+                                    <input type="number" id="max-silben" value="2" min="1" max="5" class="w-6 text-center border-b-2 border-gray-300 bg-transparent text-red-600 text-lg focus:border-blue-500 outline-none p-0" onfocus="this.select()" onchange="state.settings.manualSyllables = true">
+                                </div>
+                            </div>
 
-                    <!-- Modus Auswahl (Dropdown) -->
-                    <div class="flex flex-col gap-1">
-                        <!-- LABEL: text-sm -->
-                        <label class="text-sm font-bold text-gray-400 uppercase ml-1 text-center">Modus</label>
-                        <div class="flex items-center justify-center gap-3 bg-white border-2 border-gray-200 rounded-lg p-3 shadow-sm">
-                            <!-- Zahl Input: text-3xl -->
-                            <input type="number" id="mode-value" value="5" min="1" max="60" class="w-20 text-center text-3xl font-bold text-red-600 outline-none border-b border-gray-200 bg-transparent" onfocus="this.select()" onchange="updateModeValue(this.value)">
-                            
-                            <!-- Dropdown: text-xl -->
-                            <select id="mode-select" class="bg-transparent font-bold text-blue-600 outline-none text-xl touch-target text-center" onchange="switchMode(this.value)">
-                                <option value="time">Minuten lesen</option>
-                                <option value="count">Wörter lesen</option>
-                            </select>
+                            <!-- Modus -->
+                            <div class="flex-[1.5] flex flex-col justify-center items-center bg-white border border-gray-200 rounded-lg p-2 shadow-sm">
+                                <label class="text-[10px] font-bold text-gray-400 uppercase mb-1">Modus</label>
+                                <div class="flex items-center justify-center gap-2 w-full">
+                                    <input type="number" id="mode-value" value="5" min="1" max="60" class="w-12 text-center text-2xl font-bold text-red-600 outline-none border-b border-gray-200 bg-transparent" onfocus="this.select()" onchange="updateModeValue(this.value)">
+                                    <select id="mode-select" class="bg-transparent font-bold text-blue-600 outline-none text-sm touch-target text-left w-full" onchange="switchMode(this.value)">
+                                        <option value="time">Minuten</option>
+                                        <option value="count">Wörter</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Toggles -->
+                        <div class="toggle-grid">
+                            <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                                <input id="silben-faerben" type="checkbox" checked class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Rot-Blau</span>
+                            </label>
+                            <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                                <input id="silben-abstand" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Abstand</span>
+                            </label>
+                            <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-2 active:bg-gray-100 transition-colors">
+                                <input id="artikel-anzeigen" type="checkbox" class="h-4 w-4 text-blue-600 rounded pointer-events-none">
+                                <span class="text-[10px] sm:text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Artikel</span>
+                            </label>
                         </div>
                     </div>
-                    
-                    <!-- Toggles -->
-                    <!-- TEXT: text-xs (vereinheitlicht) -->
-                    <div class="toggle-grid mt-1">
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
-                            <input id="silben-faerben" type="checkbox" checked class="h-5 w-5 text-blue-600 rounded pointer-events-none">
-                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Rot-Blau Silben</span>
-                        </label>
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
-                            <input id="silben-abstand" type="checkbox" class="h-5 w-5 text-blue-600 rounded pointer-events-none">
-                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Silbenabstand</span>
-                        </label>
-                        <label class="touch-target flex flex-col items-center justify-center gap-1 bg-white rounded-lg border border-gray-200 py-3 active:bg-gray-100 transition-colors">
-                            <input id="artikel-anzeigen" type="checkbox" class="h-5 w-5 text-blue-600 rounded pointer-events-none">
-                            <span class="text-xs font-bold text-gray-600 pointer-events-none text-center whitespace-nowrap">Artikel zeigen</span>
-                        </label>
-                    </div>
-                </div>
 
-                <!-- Lernstand (Akkordeon Liste) -->
-                <div class="flex flex-col gap-2 overflow-y-auto" id="heft-list">
-                    <!-- Wird per JS generiert -->
-                </div>
-                
-                <!-- Versteckter Container für Buchstaben -->
-                <div id="buchstaben-wrapper" class="hidden">
-                    <div class="p-3 bg-blue-50/50 border-t border-blue-100">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-xs font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
-                            <button type="button" id="btn-select-all" class="touch-target text-xs text-blue-600 font-semibold underline px-2 py-1">Alle</button>
-                        </div>
-                        <div id="buchstaben-list-inner" class="grid grid-cols-7 gap-1"></div>
+                    <!-- Stufen Auswahl (GRID) -->
+                    <div class="grid grid-cols-2 gap-3" id="heft-grid">
+                        <!-- Wird per JS generiert -->
                     </div>
-                </div>
 
+                </div>
             </div>
 
-            <!-- BUTTON: text-2xl -->
-            <div class="absolute bottom-0 left-0 right-0 p-4 bg-white/95 backdrop-blur border-t border-gray-100 safe-area-pb z-50">
-                <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-4 rounded-xl shadow-lg active:scale-95 transition-transform">
-                    Starten
-                </button>
+            <!-- FIXED FOOTER (Sticky) -->
+            <div class="bg-white border-t border-gray-100 safe-area-pb z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+                
+                <!-- Buchstaben Container (Immer sichtbar) -->
+                <div id="buchstaben-wrapper" class="px-4 py-2 bg-blue-50/50">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-blue-800 uppercase">Buchstaben wählen:</span>
+                        <button type="button" id="btn-select-all" class="touch-target text-[10px] text-blue-600 font-semibold underline px-2 py-1">Alle der Stufe</button>
+                    </div>
+                    <div id="buchstaben-list-inner" class="grid grid-cols-7 gap-1 max-h-24 overflow-y-auto scrollbar-hide"></div>
+                </div>
+
+                <!-- Start Button -->
+                <div class="p-4 pt-2">
+                    <button id="start-button" class="touch-target w-full bg-blue-600 hover:bg-blue-700 text-white font-bold text-2xl py-3 rounded-xl shadow-lg active:scale-95 transition-transform">
+                        Starten
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -254,7 +267,7 @@
 
             // STUFE 2
             {s:['Pan','da'], a:'der'}, {s:['En','te'], a:'die'}, {s:['Pu','del'], a:'der'}, {s:['Ka','mel'], a:'das'}, {s:['Pe','li','kan'], a:'der'},
-            {s:['Lam','m'], a:'das'}, {s:['Pu','te'], a:'die'}, {s:['An','ti','lo','pe'], a:'die'}, {s:['Ka','ka','du'], a:'der'}, {s:['Sa','lat'], a:'der'},
+            {s:['Lamm'], a:'das'}, {s:['Pu','te'], a:'die'}, {s:['An','ti','lo','pe'], a:'die'}, {s:['Ka','ka','du'], a:'der'}, {s:['Sa','lat'], a:'der'},
             {s:['To','ma','te'], a:'die'}, {s:['Me','lo','ne'], a:'die'}, {s:['Ka','ka','o'], a:'der'}, {s:['Nu','del'], a:'die'}, {s:['A','na','nas'], a:'die'},
             {s:['Keks'], a:'der'}, {s:['Li','mo','na','de'], a:'die'}, {s:['Do','se'], a:'die'}, {s:['Mond'], a:'der'}, {s:['Son','ne'], a:'die'},
             {s:['Tas','se'], a:'die'}, {s:['Lu','pe'], a:'die'}, {s:['Pin','sel'], a:'der'}, {s:['Kis','te'], a:'die'}, {s:['Lam','pe'], a:'die'},
@@ -314,7 +327,7 @@
             intro: document.getElementById('intro-screen'), app: document.getElementById('app'),
             views: { start: document.getElementById('startbildschirm'), spiel: document.getElementById('spiel'), ende: document.getElementById('auswertung'), titleEnd: document.getElementById('auswertung-titel') },
             inputs: { 
-                heftList: document.getElementById('heft-list'), 
+                heftGrid: document.getElementById('heft-grid'), 
                 buchstabenWrapper: document.getElementById('buchstaben-wrapper'),
                 buchstabenList: document.getElementById('buchstaben-list-inner'),
                 min: document.getElementById('min-silben'), max: document.getElementById('max-silben'), 
@@ -468,56 +481,71 @@
             }
         }
 
-        // --- MENÜ: AKKORDEON ---
+        // --- MENÜ: GRID BUTTONS ---
         function initHeftList() {
-            dom.inputs.heftList.innerHTML = HEFTE.map((h, i) => `
-                <div class="heft-wrapper relative" id="heft-wrapper-${i}">
-                    <button class="heft-btn touch-target w-full text-left py-3 px-4 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm bg-white z-10" onclick="selectHeft(${i})">
-                        <div class="pointer-events-none">
-                            <span class="font-bold text-gray-800 text-lg">Stufe ${h.name}</span>
-                            ${h.suffix ? `<span class="text-sm text-gray-400 ml-2 whitespace-nowrap">${h.suffix}</span>` : ''}
-                        </div>
-                        <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-50 transition-opacity z-0 pointer-events-none"></div>
-                    </button>
-                </div>
+            dom.inputs.heftGrid.innerHTML = HEFTE.map((h, i) => `
+                <button class="heft-btn touch-target flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 shadow-sm bg-white hover:bg-gray-50 active:scale-95 min-h-[5rem]" onclick="selectHeft(${i})">
+                    <span class="font-bold text-gray-800 text-xl">Stufe ${h.name}</span>
+                    ${h.suffix ? `<span class="text-[10px] text-gray-400 mt-1">${h.suffix}</span>` : ''}
+                </button>
             `).join('');
         }
 
         function selectHeft(index) {
             state.settings.heftIndex = index;
             
+            // Auto-Silben
             if (!state.settings.manualSyllables) {
                 const conf = HEFTE[index];
                 dom.inputs.min.value = conf.min;
                 dom.inputs.max.value = conf.max;
             }
 
-            const wrappers = dom.inputs.heftList.querySelectorAll('.heft-wrapper');
-            const buttons = dom.inputs.heftList.querySelectorAll('.heft-btn');
-
+            // Visual Update Buttons
+            const buttons = dom.inputs.heftGrid.querySelectorAll('.heft-btn');
             buttons.forEach((btn, i) => {
-                btn.className = 'heft-btn touch-target w-full text-left py-3 px-4 rounded-xl border-2 transition-all duration-200 flex flex-col relative overflow-hidden group shadow-sm';
+                btn.className = 'heft-btn touch-target flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 shadow-sm min-h-[5rem] active:scale-95';
+                
                 if (i === index) {
                     btn.classList.add('border-blue-600', 'bg-blue-50', 'shadow-md', 'ring-1', 'ring-blue-200');
-                    if(dom.inputs.buchstabenWrapper) {
-                        wrappers[i].appendChild(dom.inputs.buchstabenWrapper);
-                        dom.inputs.buchstabenWrapper.classList.remove('hidden');
-                    }
-                } else if (i < index) {
-                    btn.classList.add('border-green-200', 'bg-green-50/50', 'opacity-75');
+                    // Text colors active
+                    btn.querySelector('span:first-child').classList.replace('text-gray-800', 'text-blue-700');
                 } else {
                     btn.classList.add('border-gray-200', 'bg-white', 'text-gray-400');
+                    btn.querySelector('span:first-child').classList.add('text-gray-800');
                 }
             });
+
             updateBuchstabenUI(index);
         }
 
+        // GEÄNDERT: Zeigt ALLE Buchstaben aus ALLEN Heften, Checkboxen entsprechend markiert
         function updateBuchstabenUI(idx, savedSelection = null) {
-            const currentLetters = HEFTE[idx].buchstaben;
+            // Sammle alle Buchstaben aus allen Heften (eindeutig)
+            let allLetters = [];
+            HEFTE.forEach(heft => {
+                heft.buchstaben.forEach(b => {
+                    if (!allLetters.includes(b)) allLetters.push(b);
+                });
+            });
+
+            // Bestimme, welche Buchstaben basierend auf der aktuellen Stufe (idx) standardmäßig aktiv sind
+            let activeLettersInStufe = [];
+            for (let i = 0; i <= idx; i++) {
+                activeLettersInStufe = activeLettersInStufe.concat(HEFTE[i].buchstaben);
+            }
+
             if(dom.inputs.buchstabenList) {
-                dom.inputs.buchstabenList.innerHTML = currentLetters.map(b => {
-                    const checked = savedSelection ? savedSelection.includes(b) : true;
-                    return `<div class="flex items-center justify-center"><input type="checkbox" id="cb-${b}" value="${b}" class="peer hidden" ${checked ? 'checked' : ''} onchange="saveSettings()"><label for="cb-${b}" class="touch-target w-full text-center py-1 border-2 border-gray-200 rounded-lg cursor-pointer text-gray-600 font-bold select-none transition-all peer-checked:border-blue-600 peer-checked:bg-white peer-checked:text-blue-700 peer-checked:shadow-sm text-sm bg-white active:scale-95 font-learning">${b}</label></div>`;
+                dom.inputs.buchstabenList.innerHTML = allLetters.map(b => {
+                    // Check if checked: either from savedSelection OR (if null) from current Stufe logic
+                    let isChecked = false;
+                    if (savedSelection) {
+                        isChecked = savedSelection.includes(b);
+                    } else {
+                        isChecked = activeLettersInStufe.includes(b);
+                    }
+
+                    return `<div class="flex items-center justify-center"><input type="checkbox" id="cb-${b}" value="${b}" class="peer hidden" ${isChecked ? 'checked' : ''} onchange="saveSettings()"><label for="cb-${b}" class="touch-target w-full text-center py-1 border-2 border-gray-200 rounded-lg cursor-pointer text-gray-600 font-bold select-none transition-all peer-checked:border-blue-600 peer-checked:bg-white peer-checked:text-blue-700 peer-checked:shadow-sm text-sm bg-white active:scale-95 font-learning">${b}</label></div>`;
                 }).join('');
             }
         }
@@ -525,6 +553,7 @@
         function selectAllChars() {
              const listInner = dom.inputs.buchstabenList;
              if(listInner) {
+                 // Einfach alle verfügbaren Inputs anhaken
                  listInner.querySelectorAll('input').forEach(cb => cb.checked = true);
                  saveSettings();
              }
@@ -546,15 +575,14 @@
         }
 
         function getAllAllowedLetters() {
-            const idx = state.settings.heftIndex;
-            let allowed = [];
-            for(let i=0; i<idx; i++) allowed = allowed.concat(HEFTE[i].buchstaben);
+            // Now we just read from the checkboxes directly, as they cover all possibilities
             const listInner = dom.inputs.buchstabenList;
             if(listInner) {
                  const checked = Array.from(listInner.querySelectorAll('input:checked')).map(c => c.value);
-                 allowed = allowed.concat(checked);
+                 return checked;
             }
-            return [...new Set(allowed)];
+            // Fallback (should not happen if UI is rendered)
+            return [];
         }
 
         function startAppSequence() {
@@ -585,7 +613,8 @@
             
             const allowed = getAllAllowedLetters();
             if (allowed.length === 0) {
-                 state.settings.currentLetters = HEFTE[0].buchstaben;
+                 // Fallback: Current Heft letters
+                 state.settings.currentLetters = HEFTE[state.settings.heftIndex].buchstaben;
             } else {
                  state.settings.currentLetters = allowed;
             }
