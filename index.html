@@ -139,8 +139,8 @@
                         </div>
                     </div>
 
-                    <!-- Stufen Auswahl -->
-                    <div class="grid grid-cols-2 gap-3" id="heft-grid"></div>
+                    <!-- Stufen Auswahl (3 Spalten Grid) -->
+                    <div class="grid grid-cols-3 gap-2" id="heft-grid"></div>
                     
                     <!-- Buchstaben Auswahl im Flow -->
                     <div id="buchstaben-wrapper" class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 mt-1">
@@ -210,10 +210,12 @@
     <script>
         // --- DATEN ---
         const HEFTE = [
-            { name: "1", letters: "M, A, L, I, O, S", suffix: "", buchstaben: ['M', 'A', 'L', 'I', 'O', 'S'], min: 1, max: 2 },
-            { name: "2", letters: "E, N, D, U, P, K", suffix: "(inkl. Stufe 1)", buchstaben: ['E', 'N', 'D', 'U', 'P', 'K'], min: 2, max: 3 },
-            { name: "3", letters: "H, T, R, F, W, Ei, Au, Eu", suffix: "(inkl. Stufe 1 und 2)", buchstaben: ['H', 'T', 'R', 'F', 'W', 'Ei', 'Au', 'Eu'], min: 2, max: 4 },
-            { name: "4", letters: "B, G, J, Z, Ch, Sch, Ck, Ä, Ö, Ü, V, X, Y, Q", suffix: "(inkl. Stufe 1, 2 und 3)", buchstaben: ['B', 'G', 'J', 'Z', 'Ch', 'Sch', 'Ck', 'Ä', 'Ö', 'Ü', 'V', 'X', 'Y', 'Q'], min: 2, max: 4 }
+            { name: "1", letters: "L, O, A, M, I, S, T", suffix: "", buchstaben: ['L', 'O', 'A', 'M', 'I', 'S', 'T'], min: 1, max: 2 },
+            { name: "2", letters: "E, N, D, U, P, K", suffix: "(inkl. Stufe 1)", buchstaben: ['E', 'N', 'D', 'U', 'P', 'K'], min: 1, max: 3 },
+            { name: "3", letters: "B, F, Ei, R, H, W", suffix: "(inkl. Stufe 1-2)", buchstaben: ['B', 'F', 'Ei', 'R', 'H', 'W'], min: 2, max: 3 },
+            { name: "4", letters: "G, Au, Sch, ie, Z, Eu, Ch", suffix: "(inkl. Stufe 1-3)", buchstaben: ['G', 'Au', 'Sch', 'ie', 'Z', 'Eu', 'Ch'], min: 2, max: 4 },
+            { name: "5", letters: "Sp, St, Ä, Ö, Ü, ng, Äu, V, J", suffix: "(inkl. Stufe 1-4)", buchstaben: ['Sp', 'St', 'Ä', 'Ö', 'Ü', 'ng', 'Äu', 'V', 'J'], min: 2, max: 4 },
+            { name: "6", letters: "nk, ß, X, Y, C, ck, Qu", suffix: "(inkl. Stufe 1-5)", buchstaben: ['nk', 'ß', 'X', 'Y', 'C', 'ck', 'Qu'], min: 2, max: 4 }
         ];
 
         const ANIMALS = [
@@ -225,56 +227,73 @@
         ];
 
         const VOKALE_LISTE = ['A', 'E', 'I', 'O', 'U', 'Ä', 'Ö', 'Ü'];
-        const DIPHTHONGE_LISTE = ['Ei', 'Ai', 'Eu', 'Au'];
+        const DIPHTHONGE_LISTE = ['Ei', 'Ai', 'Eu', 'Au', 'ie', 'Äu'];
         const RAINBOW_COLORS = ['#9C4F96', '#FF6355', '#FBA949', '#FAE442', '#8BD448', '#2AA8F2'];
         
-        // s: Silben, a: Artikel (optional), l: Level
+        // l: Level (1-6)
         const WOERTERBUCH = [
-            // STUFE 1
+            // STUFE 1 (L,O,A,M,I,S,T)
             {l:1, s:['Ma','ma'], a:'die'}, {l:1, s:['Mi','mi'], a:'die'}, {l:1, s:['O','mi'], a:'die'}, {l:1, s:['O','ma'], a:'die'}, {l:1, s:['A','li'], a:'der'},
             {l:1, s:['Li','lo'], a:'die'}, {l:1, s:['Lo','la'], a:'die'}, {l:1, s:['Li','sa'], a:'die'}, {l:1, s:['Sis','si'], a:'die'}, {l:1, s:['Mo','mo'], a:'der'},
             {l:1, s:['La','ma'], a:'das'}, {l:1, s:['Li','la'], a:'das'}, {l:1, s:['Sa','la','mi'], a:'die'}, {l:1, s:['Li','mo'], a:'die'}, {l:1, s:['Si','lo'], a:'das'},
             {l:1, s:['So','lo'], a:'das'}, {l:1, s:['Mal'], a:'das'}, {l:1, s:['Los'], a:'das'}, {l:1, s:['Mi','mi','mi'], a:'das'},
             {l:1, s:['li','la']}, {l:1, s:['los']}, {l:1, s:['so','la','la']}, {l:1, s:['mal']}, {l:1, s:['soll']}, {l:1, s:['lass']}, {l:1, s:['So','ma','li','a']},
+            {l:1, s:['Sa','lat'], a:'der'}, {l:1, s:['Ast'], a:'der'}, {l:1, s:['Mast'], a:'der'}, {l:1, s:['List'], a:'die'}, {l:1, s:['Tal'], a:'das'}, {l:1, s:['Tat'], a:'die'},
+            {l:1, s:['ist']}, {l:1, s:['toll']}, {l:1, s:['satt']}, {l:1, s:['alt']},
             {l:1, s:['Im']}, {l:1, s:['Am']},
 
-            // STUFE 2
+            // STUFE 2 (+E,N,D,U,P,K)
             {l:2, s:['Pan','da'], a:'der'}, {l:2, s:['En','te'], a:'die'}, {l:2, s:['Pu','del'], a:'der'}, {l:2, s:['Ka','mel'], a:'das'}, {l:2, s:['Pe','li','kan'], a:'der'},
-            {l:2, s:['Lamm'], a:'das'}, {l:2, s:['Pu','te'], a:'die'}, {l:2, s:['An','ti','lo','pe'], a:'die'}, {l:2, s:['Ka','ka','du'], a:'der'}, {l:2, s:['Sa','lat'], a:'der'},
+            {l:2, s:['Lamm'], a:'das'}, {l:2, s:['Pu','te'], a:'die'}, {l:2, s:['An','ti','lo','pe'], a:'die'}, {l:2, s:['Ka','ka','du'], a:'der'},
             {l:2, s:['To','ma','te'], a:'die'}, {l:2, s:['Me','lo','ne'], a:'die'}, {l:2, s:['Ka','ka','o'], a:'der'}, {l:2, s:['Nu','del'], a:'die'}, {l:2, s:['A','na','nas'], a:'die'},
             {l:2, s:['Keks'], a:'der'}, {l:2, s:['Li','mo','na','de'], a:'die'}, {l:2, s:['Do','se'], a:'die'}, {l:2, s:['Mond'], a:'der'}, {l:2, s:['Son','ne'], a:'die'},
             {l:2, s:['Tas','se'], a:'die'}, {l:2, s:['Lu','pe'], a:'die'}, {l:2, s:['Pin','sel'], a:'der'}, {l:2, s:['Kis','te'], a:'die'}, {l:2, s:['Lam','pe'], a:'die'},
             {l:2, s:['Pa','ket'], a:'das'}, {l:2, s:['Post'], a:'die'}, {l:2, s:['Tan','ne'], a:'die'}, {l:2, s:['Sand'], a:'der'}, {l:2, s:['See'], a:'der'},
             {l:2, s:['Do','mi','no'], a:'das'}, {l:2, s:['Mi','ka','do'], a:'das'}, {l:2, s:['Pa','pa'], a:'der'}, {l:2, s:['Tan','te'], a:'die'}, {l:2, s:['On','kel'], a:'der'},
             {l:2, s:['Pi','lot'], a:'der'}, {l:2, s:['Kun','de'], a:'der'}, {l:2, s:['Pa','te'], a:'der'}, {l:2, s:['Mi','nu','ten'], a:'die'}, {l:2, s:['E','le','na'], a:'die'},
-            {l:2, s:['nett']}, {l:2, s:['dumm']}, {l:2, s:['kalt']}, {l:2, s:['nass']}, {l:2, s:['laut']}, {l:2, s:['mun','ter']}, {l:2, s:['dan','kend']}, {l:2, s:['rund']}, {l:2, s:['e','del']}, {l:2, s:['toll']}, {l:2, s:['satt']},
+            {l:2, s:['nett']}, {l:2, s:['dumm']}, {l:2, s:['kalt']}, {l:2, s:['nass']}, {l:2, s:['laut']}, {l:2, s:['mun','ter']}, {l:2, s:['dan','kend']}, {l:2, s:['rund']}, {l:2, s:['e','del']},
             {l:2, s:['tun']}, {l:2, s:['tunkt']}, {l:2, s:['putzt']}, {l:2, s:['isst']}, {l:2, s:['sen','det']}, {l:2, s:['dehnt']}, {l:2, s:['en','det']}, {l:2, s:['kannst']}, {l:2, s:['ma','len']}, {l:2, s:['le','sen']}, {l:2, s:['tur','nen']}, {l:2, s:['sein']},
             {l:2, s:['tas','ten']}, {l:2, s:['tes','ten']}, {l:2, s:['kos','ten']}, {l:2, s:['pus','ten']}, {l:2, s:['kne','ten']},
 
-            // STUFE 3
-            {l:3, s:['Eis'], a:'das'}, {l:3, s:['Maus'], a:'die'}, {l:3, s:['Haus'], a:'das'}, {l:3, s:['Au','to'], a:'das'}, {l:3, s:['Eu','le'], a:'die'}, {l:3, s:['Sei','fe'], a:'die'},
-            {l:3, s:['Lei','ter'], a:'die'}, {l:3, s:['Mau','er'], a:'die'}, {l:3, s:['Feu','er'], a:'das'}, {l:3, s:['Eu','ro'], a:'der'}, {l:3, s:['Rei','se'], a:'die'}, {l:3, s:['A','mei','se'], a:'die'},
-            {l:3, s:['Haus','tier'], a:'das'}, {l:3, s:['Ho','se'], a:'die'}, {l:3, s:['Hut'], a:'der'}, {l:3, s:['Hof'], a:'der'}, {l:3, s:['Fo','to'], a:'das'}, {l:3, s:['So','fa'], a:'das'},
-            {l:3, s:['E','le','fant'], a:'der'}, {l:3, s:['Fahr','rad'], a:'das'}, {l:3, s:['Win','ter'], a:'der'}, {l:3, s:['Was','ser'], a:'das'}, {l:3, s:['Wurm'], a:'der'}, {l:3, s:['Tor'], a:'das'},
-            {l:3, s:['Ra','dio'], a:'das'}, {l:3, s:['Te','le','fon'], a:'das'}, {l:3, s:['Ta','fel'], a:'die'}, {l:3, s:['Fens','ter'], a:'das'}, {l:3, s:['Leh','rer'], a:'der'}, {l:3, s:['Fah','rer'], a:'der'},
-            {l:3, s:['Far','be'], a:'die'}, {l:3, s:['Fle','der','maus'], a:'die'}, {l:3, s:['Mar','me','la','de'], a:'die'}, {l:3, s:['Feu','er','wehr'], a:'die'}, {l:3, s:['In','di','a','ner'], a:'der'}, {l:3, s:['Trom','pe','te'], a:'die'}, {l:3, s:['Pra','li','ne'], a:'die'},
+            // STUFE 3 (+B,F,Ei,R,H,W)
+            {l:3, s:['Eis'], a:'das'}, {l:3, s:['Sei','fe'], a:'die'}, {l:3, s:['Lei','ter'], a:'die'}, {l:3, s:['Rei','se'], a:'die'}, {l:3, s:['Rei','fen'], a:'der'}, {l:3, s:['Brei'], a:'der'},
+            {l:3, s:['Hund'], a:'der'}, {l:3, s:['Wolf'], a:'der'}, {l:3, s:['Ro','se'], a:'die'}, {l:3, s:['Ho','se'], a:'die'}, {l:3, s:['Hut'], a:'der'}, {l:3, s:['Hof'], a:'der'},
+            {l:3, s:['Fo','to'], a:'das'}, {l:3, s:['So','fa'], a:'das'}, {l:3, s:['E','le','fant'], a:'der'}, {l:3, s:['Fahr','rad'], a:'das'}, {l:3, s:['Win','ter'], a:'der'}, {l:3, s:['Was','ser'], a:'das'},
+            {l:3, s:['Wurm'], a:'der'}, {l:3, s:['Tor'], a:'das'}, {l:3, s:['Ra','dio'], a:'das'}, {l:3, s:['Te','le','fon'], a:'das'}, {l:3, s:['Ta','fel'], a:'die'}, {l:3, s:['Fens','ter'], a:'das'},
+            {l:3, s:['Leh','rer'], a:'der'}, {l:3, s:['Fah','rer'], a:'der'}, {l:3, s:['Far','be'], a:'die'}, {l:3, s:['Mar','me','la','de'], a:'die'}, {l:3, s:['Feu','er','wehr'], a:'die'}, {l:3, s:['In','di','a','ner'], a:'der'},
+            {l:3, s:['Trom','pe','te'], a:'die'}, {l:3, s:['Pra','li','ne'], a:'die'}, {l:3, s:['Ball'], a:'der'}, {l:3, s:['Brot'], a:'das'}, {l:3, s:['Bein'], a:'das'}, {l:3, s:['Baum'], a:'der'},
             {l:3, s:['lei','se']}, {l:3, s:['teu','er']}, {l:3, s:['neu']}, {l:3, s:['froh']}, {l:3, s:['hart']}, {l:3, s:['wahr']}, {l:3, s:['hell']}, {l:3, s:['warm']}, {l:3, s:['rot']}, {l:3, s:['weit']}, {l:3, s:['frei']}, {l:3, s:['flau']}, {l:3, s:['treu']},
-            {l:3, s:['reist']}, {l:3, s:['läuft']}, {l:3, s:['weint']}, {l:3, s:['ruft']}, {l:3, s:['hört']}, {l:3, s:['haut']}, {l:3, s:['kauft']}, {l:3, s:['freut']}, {l:3, s:['hofft']}, {l:3, s:['wärmt']}, {l:3, s:['wart']}, {l:3, s:['fah','re']}, {l:3, s:['ru','fen']}, {l:3, s:['ho','len']},
+            {l:3, s:['reist']}, {l:3, s:['läuft']}, {l:3, s:['weint']}, {l:3, s:['ruft']}, {l:3, s:['hört']}, {l:3, s:['haut']}, {l:3, s:['kauft']}, {l:3, s:['freut']}, {l:3, s:['hofft']}, {l:3, s:['wärmt']}, {l:3, s:['wart']}, {l:3, s:['fah','re']}, {l:3, s:['ho','len']},
             {l:3, s:['ren','nen']}, {l:3, s:['ru','hen']}, {l:3, s:['ru','fen']}, {l:3, s:['rei','ten']}, {l:3, s:['lau','fen']}, {l:3, s:['kau','fen']}, {l:3, s:['tei','len']}, {l:3, s:['fei','ern']}, {l:3, s:['heu','len']}, {l:3, s:['woh','nen']}, {l:3, s:['fah','ren']}, {l:3, s:['wer','fen']}, {l:3, s:['war','ten']}, {l:3, s:['hus','ten']},
 
-            // STUFE 4
-            {l:4, s:['Bär'], a:'der'}, {l:4, s:['Kä','se'], a:'der'}, {l:4, s:['Öl'], a:'das'}, {l:4, s:['Tür'], a:'die'}, {l:4, s:['Müll'], a:'der'}, {l:4, s:['Lö','we'], a:'der'}, {l:4, s:['Schü','ler'], a:'der'}, {l:4, s:['Schu','le'], a:'die'},
-            {l:4, s:['Tisch'], a:'der'}, {l:4, s:['Fisch'], a:'der'}, {l:4, s:['Schiff'], a:'das'}, {l:4, s:['Schaf'], a:'das'}, {l:4, s:['Ta','sche'], a:'die'}, {l:4, s:['Wä','sche'], a:'die'}, {l:4, s:['Mäd','chen'], a:'das'}, {l:4, s:['Kö','nig'], a:'der'},
-            {l:4, s:['Ü','bung'], a:'die'}, {l:4, s:['Scho','ko','la','de'], a:'die'}, {l:4, s:['Schmet','ter','ling'], a:'der'}, {l:4, s:['Re','gen','schirm'], a:'der'},
-            {l:4, s:['Buch'], a:'das'}, {l:4, s:['Baum'], a:'der'}, {l:4, s:['Blu','me'], a:'die'}, {l:4, s:['Brot'], a:'das'}, {l:4, s:['Ball'], a:'der'}, {l:4, s:['Bein'], a:'das'}, {l:4, s:['Bauch'], a:'der'}, {l:4, s:['Ba','cken'], a:'das'},
-            {l:4, s:['We','cker'], a:'der'}, {l:4, s:['Da','ckel'], a:'der'}, {l:4, s:['Sack'], a:'der'}, {l:4, s:['Ja','cke'], a:'die'}, {l:4, s:['Geld'], a:'das'}, {l:4, s:['Gold'], a:'das'}, {l:4, s:['Gras'], a:'das'}, {l:4, s:['Glas'], a:'das'},
-            {l:4, s:['Glück'], a:'das'}, {l:4, s:['Milch'], a:'die'}, {l:4, s:['Dach'], a:'das'}, {l:4, s:['Licht'], a:'das'}, {l:4, s:['Nacht'], a:'die'}, {l:4, s:['Re','gen','bo','gen'], a:'der'}, {l:4, s:['Bä','cke','rei'], a:'die'},
-            {l:4, s:['Ge','mü','se'], a:'das'}, {l:4, s:['Ho','nig','bie','ne'], a:'die'}, {l:4, s:['Vo','gel'], a:'der'}, {l:4, s:['Va','se'], a:'die'}, {l:4, s:['Va','ter'], a:'der'}, {l:4, s:['Vul','kan'], a:'der'},
-            {l:4, s:['Jä','ger'], a:'der'}, {l:4, s:['Jun','ge'], a:'der'}, {l:4, s:['Ja','gu','ar'], a:'der'}, {l:4, s:['Jog','hurt'], a:'der'}, {l:4, s:['Ta','xi'], a:'das'}, {l:4, s:['Text'], a:'der'}, {l:4, s:['Xy','lo','phon'], a:'das'},
-            {l:4, s:['Po','ny'], a:'das'}, {l:4, s:['Han','dy'], a:'das'}, {l:4, s:['Qual','le'], a:'die'}, {l:4, s:['A','qua','ri','um'], a:'das'}, {l:4, s:['Quel','le'], a:'die'}, {l:4, s:['Last','wa','gen'], a:'der'},
-            {l:4, s:['Lo','ko','mo','ti','ve'], a:'die'}, {l:4, s:['A','ben','teu','er'], a:'das'},
-            {l:4, s:['schön']}, {l:4, s:['süß']}, {l:4, s:['grün']}, {l:4, s:['gelb']}, {l:4, s:['glück','lich']}, {l:4, s:['weich']}, {l:4, s:['groß']}, {l:4, s:['klein']}, {l:4, s:['jung']}, {l:4, s:['bö','se']}, {l:4, s:['schwer']}, {l:4, s:['e','ckig']}, {l:4, s:['mu','tig']},
-            {l:4, s:['magst']}, {l:4, s:['gibst']}, {l:4, s:['fängt']}, {l:4, s:['schlägt']}, {l:4, s:['bricht']}, {l:4, s:['wächst']}, {l:4, s:['jagt']}, {l:4, s:['quakt']}, {l:4, s:['übt']}, {l:4, s:['ge','hen']}, {l:4, s:['la','chen']}, {l:4, s:['ko','chen']}
+            // STUFE 4 (+G,Au,Sch,ie,Z,Eu,Ch)
+            {l:4, s:['Maus'], a:'die'}, {l:4, s:['Haus'], a:'das'}, {l:4, s:['Au','to'], a:'das'}, {l:4, s:['Eu','le'], a:'die'}, {l:4, s:['Mau','er'], a:'die'}, {l:4, s:['Feu','er'], a:'das'}, {l:4, s:['Eu','ro'], a:'der'},
+            {l:4, s:['A','mei','se'], a:'die'}, {l:4, s:['Fle','der','maus'], a:'die'}, {l:4, s:['Haus','tier'], a:'das'},
+            {l:4, s:['Schu','le'], a:'die'}, {l:4, s:['Tisch'], a:'der'}, {l:4, s:['Fisch'], a:'der'}, {l:4, s:['Schiff'], a:'das'}, {l:4, s:['Schaf'], a:'das'}, {l:4, s:['Ta','sche'], a:'die'}, {l:4, s:['Wä','sche'], a:'die'},
+            {l:4, s:['Buch'], a:'das'}, {l:4, s:['Geld'], a:'das'}, {l:4, s:['Gold'], a:'das'}, {l:4, s:['Gras'], a:'das'}, {l:4, s:['Glas'], a:'das'}, {l:4, s:['Dach'], a:'das'}, {l:4, s:['Licht'], a:'das'}, {l:4, s:['Nacht'], a:'die'},
+            {l:4, s:['Ge','mü','se'], a:'das'}, {l:4, s:['Bie','ne'], a:'die'}, {l:4, s:['Rie','se'], a:'der'}, {l:4, s:['Knie'], a:'das'}, {l:4, s:['Brief'], a:'der'}, {l:4, s:['Zeh'], a:'der'}, {l:4, s:['Zahn'], a:'der'}, {l:4, s:['Zelt'], a:'das'},
+            {l:4, s:['ge','hen']}, {l:4, s:['ge','ben']}, {l:4, s:['sa','gen']}, {l:4, s:['sin','gen']}, {l:4, s:['lie','gen']}, {l:4, s:['ma','chen']}, {l:4, s:['su','chen']}, {l:4, s:['schla','fen']}, {l:4, s:['schrei','ben']}, {l:4, s:['schwim','men']},
+
+            // STUFE 5 (+Sp,St,Ä,Ö,Ü,ng,Äu,V,J)
+            {l:5, s:['Spin','ne'], a:'die'}, {l:5, s:['Sport'], a:'der'}, {l:5, s:['Spiel'], a:'das'}, {l:5, s:['Stern'], a:'der'}, {l:5, s:['Stein'], a:'der'}, {l:5, s:['Stadt'], a:'die'},
+            {l:5, s:['Bär'], a:'der'}, {l:5, s:['Kä','se'], a:'der'}, {l:5, s:['Mäd','chen'], a:'das'}, {l:5, s:['Öl'], a:'das'}, {l:5, s:['Lö','we'], a:'der'}, {l:5, s:['Kö','nig'], a:'der'},
+            {l:5, s:['Tür'], a:'die'}, {l:5, s:['Müll'], a:'der'}, {l:5, s:['Schü','ler'], a:'der'}, {l:5, s:['Ü','bung'], a:'die'}, {l:5, s:['Glück'], a:'das'},
+            {l:5, s:['Ring'], a:'der'}, {l:5, s:['Ding'], a:'das'}, {l:5, s:['Jun','ge'], a:'der'}, {l:5, s:['Zun','ge'], a:'die'},
+            {l:5, s:['Häu','ser'], a:'die'}, {l:5, s:['Mäu','se'], a:'die'}, {l:5, s:['Läu','se'], a:'die'},
+            {l:5, s:['Vo','gel'], a:'der'}, {l:5, s:['Va','se'], a:'die'}, {l:5, s:['Va','ter'], a:'der'}, {l:5, s:['Vul','kan'], a:'der'},
+            {l:5, s:['Jä','ger'], a:'der'}, {l:5, s:['Ja','gu','ar'], a:'der'}, {l:5, s:['Jog','hurt'], a:'der'}, {l:5, s:['Ja','cke'], a:'die'},
+            {l:5, s:['schön']}, {l:5, s:['grün']}, {l:5, s:['süß']}, {l:5, s:['jung']}, {l:5, s:['bös']},
+            {l:5, s:['sprin','gen']}, {l:5, s:['ste','hen']}, {l:5, s:['spie','len']}, {l:5, s:['ü','ben']}, {l:5, s:['jagen']},
+
+            // STUFE 6 (+nk,ß,X,Y,C,ck,Qu)
+            {l:6, s:['Bank'], a:'die'}, {l:6, s:['Dank'], a:'der'}, {l:6, s:['Schrank'], a:'der'},
+            {l:6, s:['Fuß'], a:'der'}, {l:6, s:['Stra','ße'], a:'die'}, {l:6, s:['groß']}, {l:6, s:['süß']}, {l:6, s:['weiß']},
+            {l:6, s:['Xy','lo','phon'], a:'das'}, {l:6, s:['Ta','xi'], a:'das'}, {l:6, s:['Text'], a:'der'},
+            {l:6, s:['Po','ny'], a:'das'}, {l:6, s:['Han','dy'], a:'das'}, {l:6, s:['Yog','hurt'], a:'der'},
+            {l:6, s:['Com','pu','ter'], a:'der'}, {l:6, s:['Clown'], a:'der'}, {l:6, s:['Cam','ping'], a:'das'},
+            {l:6, s:['Sack'], a:'der'}, {l:6, s:['Da','ckel'], a:'der'}, {l:6, s:['We','cker'], a:'der'}, {l:6, s:['So','cken'], a:'die'}, {l:6, s:['Rü','cken'], a:'der'}, {l:6, s:['Bä','cker'], a:'der'}, {l:6, s:['Schne','cke'], a:'die'},
+            {l:6, s:['Qual','le'], a:'die'}, {l:6, s:['Quel','le'], a:'die'}, {l:6, s:['Quark'], a:'der'}, {l:6, s:['A','qua','ri','um'], a:'das'}, {l:6, s:['quaken']}, {l:6, s:['quer']},
+            {l:6, s:['ba','cken']}, {l:6, s:['pa','cken']}, {l:6, s:['kochen']}, {l:6, s:['la','chen']}
         ];
 
         // --- STATE ---
@@ -507,7 +526,7 @@
                         const dy = cy - b.position.y;
                         
                         // Startet NOCH langsamer (0.0000002)
-                        const pullStrength = 0.0000002 * (1 + elapsed/3000); 
+                        const pullStrength = 0.0000005 * (1 + elapsed/3000); 
                         const turnStrength = 0.00001 * (1 + elapsed/4000);
                         
                         // Dämpfung
@@ -731,45 +750,31 @@
              const allowedCharsFlat = new Set();
              state.settings.currentLetters.forEach(token => token.toUpperCase().split('').forEach(char => allowedCharsFlat.add(char)));
              
-             // Check: Was ist das höchste Level, das wir "aktiviert" haben?
-             // Wir gehen davon aus, dass wir maximal Wörter des aktuellen Heftes nutzen wollen,
-             // PLUS Wörter, die theoretisch möglich sind durch manuelle Auswahl.
-             // Aber User-Request: "EI Wörter erst ab Stufe 3".
-             // Also filtern wir Wörter, deren Level > höchstes 'Heft' eines gewählten Buchstabens ist?
-             // Nein, besser: Wir erlauben Wörter, wenn ihr Level <= dem Level des schwierigsten Buchstaben ist, der im Wort vorkommt?
-             // Simplest approach per request: Check word level property.
-             
              state.game.realWordsPossible = WOERTERBUCH.filter(silben => {
                 // 1. Check Chars
                 if (!silben.s.join('').toUpperCase().split('').every(c => allowedCharsFlat.has(c))) return false;
 
                 // 2. Check Level (Hard constraint from DB)
-                // Aber: Wenn ich in Stufe 2 bin und 'Ei' aus Stufe 3 manuell anwähle, darf ich dann 'Eis' (Level 3) sehen?
-                // Ja, wahrscheinlich.
-                // Also: Wir müssen wissen, ob wir Buchstaben haben, die dieses Level rechtfertigen.
-                // Wir erlauben das Wort, wenn ALLE seine Buchstaben in 'allowedCharsFlat' sind. (Das ist oben schon passiert).
-                // UND: Das Wort-Level darf nicht höher sein als das höchste Level eines ausgewählten Buchstabens?
-                // Nein, 'Eis' hat E, i, s. E=2, i=1, s=1. Aber 'Eis' ist Level 3 wegen Diphthong.
-                // D.h. wir brauchen 'Ei' als Token.
-                // Unsere `currentLetters` enthält Tokens wie 'Ei'.
-                // Wenn 'Ei' in `currentLetters` ist, dann ist das Wort erlaubt.
-                // ABER: 'Ameise' enthält 'Ei'. Wenn wir 'Ei' nicht als Token gewählt haben, sondern nur 'E' und 'i' einzeln,
-                // dann würde 'Ameise' technisch durch den Char-Check kommen (weil A,m,e,i,s,e gewählt sind).
-                // DESHALB brauchten wir das Level-Attribut.
-                // Wir filtern Wörter raus, deren Level > ist als das höchste Level, das wir "freigeschaltet" haben?
-                // Was ist "freigeschaltet"?
-                // Wir nehmen einfach das Maximum der Level aller ausgewählten Buchstaben-Gruppen (Heft-Zugehörigkeit).
+                // GEÄNDERT: Logik vereinfacht. Wenn ein Wort aus Level X ist, darf es nur kommen,
+                // wenn wir Buchstaben/Hefte ausgewählt haben, die mindestens bis Level X reichen.
+                // Aber: Wir haben "currentLetters" als Liste von erlaubten Buchstaben.
+                // Wir ermitteln das MAXIMALE Level, aus dem Buchstaben gewählt wurden.
+                // Beispiel: "Ei" ist Level 3. Wenn "Ei" gewählt ist, ist maxLevel >= 3.
                 
-                let maxAllowedLevel = 1;
+                let maxAllowedLevel = 0;
+                // Alle gewählten Buchstaben durchgehen
                 state.settings.currentLetters.forEach(tok => {
-                    // Finde Level des Tokens
+                    // In welchem Heft kommt dieser Buchstabe vor?
                     HEFTE.forEach((h, idx) => {
+                        // Ein Buchstabe kann in mehreren Heften "vorkommen" (theoretisch, hier aber unique per Stufe definiert in HEFTE array)
+                        // ABER: In HEFTE sind sie unique pro Stufe definiert.
                         if (h.buchstaben.includes(tok)) {
-                            if (idx + 1 > maxAllowedLevel) maxAllowedLevel = idx + 1;
+                            if ((idx + 1) > maxAllowedLevel) maxAllowedLevel = idx + 1;
                         }
                     });
                 });
                 
+                // Wort Level muss <= dem höchsten Level der ausgewählten Buchstaben sein.
                 if (silben.l > maxAllowedLevel) return false;
 
                 // 3. Length check
@@ -1088,7 +1093,8 @@
                 
                 // If in bonus phase and empty (Time Mode Logic), go to end
                 if (state.game.inBonusPhase && !state.game.isVortexing) { // Nur checken wenn kein Wirbel
-                     const remaining = bodies.filter(b => b.label !== 'wall' && b.label !== 'confetti' && b.label !== 'stirrer').length;
+                     // GEÄNDERT: LABEL 'ball' wird verwendet für korrekten Count
+                     const remaining = bodies.filter(b => b.label === 'ball').length;
                      if (remaining === 0 && !state.game.transitioningToEnd) {
                          state.game.transitioningToEnd = true;
                          setTimeout(showEnd, 1000);
@@ -1249,7 +1255,8 @@
             const clicked = Matter.Query.point(Matter.Composite.allBodies(world), {x, y});
             let removed = false;
             clicked.forEach(b => { 
-                if(!b.isStatic && b.label!=='wall') { 
+                // ONLY REMOVE BALLS
+                if(b.label === 'ball') { 
                     Matter.Composite.remove(world, b); 
                     createConfetti(b.position.x, b.position.y, b.render.fillStyle); 
                     removed=true; 
